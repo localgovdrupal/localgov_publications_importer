@@ -84,7 +84,7 @@ class Importer {
       $client = \OpenAI::client('');
 
       $result = $client->chat()->create([
-        'model' => 'gpt-3.5-turbo', // Was gpt-4
+        'model' => 'gpt-3.5-turbo',
         'messages' => [
           [
             'role' => 'user',

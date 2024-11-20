@@ -12,6 +12,7 @@
         }
     ],
     "require": {
+        "openai-php/client": "^0.8.4",
         "smalot/pdfparser": "^2.7.0"
     }
 }

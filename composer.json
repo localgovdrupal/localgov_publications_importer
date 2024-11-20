@@ -1,8 +1,8 @@
 {
-    "name": "wearechicken/localgov_publications_importer",
+    "name": "localgovdrupal/localgov_publications_importer",
     "description": "PDF to HTML publication importer for the LocalGovDrupal distribution.",
     "type": "drupal-module",
-    "homepage": "https://github.com/wearechicken/localgov_publications_importer",
+    "homepage": "https://github.com/localgovdrupal/localgov_publications_importer",
     "license": "GPL-2.0-or-later",
     "minimum-stability": "dev",
     "repositories": [

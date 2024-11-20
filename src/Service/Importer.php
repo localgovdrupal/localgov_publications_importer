@@ -9,7 +9,7 @@ use Smalot\PdfParser\Config as PdfParserConfig;
 use Smalot\PdfParser\Parser as PdfParser;
 
 /**
- * Importer service.
+ * Imports content from uploaded files.
  */
 class Importer {
 

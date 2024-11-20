@@ -5,7 +5,6 @@ namespace Drupal\localgov_publications_importer\Form;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\file\Entity\File;
 use Drupal\localgov_publications_importer\Service\Importer as PublicationImporter;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 

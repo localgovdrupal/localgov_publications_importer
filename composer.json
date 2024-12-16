@@ -13,6 +13,8 @@
     ],
     "require": {
         "openai-php/client": "^0.10.3",
-        "smalot/pdfparser": "^2.7.0"
+        "smalot/pdfparser": "^2.7.0",
+        "drupal/ai": "^1.0@dev",
+        "drupal/ai_provider_openai": "^1.0@dev"
     }
 }

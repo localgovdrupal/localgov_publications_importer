@@ -13,26 +13,17 @@ use Drupal\file\Entity\File;
 class PublicationImportForm extends FormBase {
 
   /**
-   * Publication importer service
-   *
-   * @var \Drupal\localgov_publications_importer\Service\Importer
-   */
-  protected $publicationImporter;
-
-  /**
    * Constructor.
-   *
-   * @param \Drupal\localgov_publications_importer\Service\Importer $publicationImporter
-   *   Publication importer.
    */
-  public function __construct(PublicationImporter $publicationImporter) {
-    $this->publicationImporter = $publicationImporter;
+  public function __construct(
+    protected PublicationImporter $publicationImporter,
+  ) {
   }
 
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container) {
+  public static function create(ContainerInterface $container): static {
     return new static(
       $container->get('localgov_publications_importer.importer')
     );
@@ -79,7 +70,7 @@ class PublicationImportForm extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public function submitForm(array &$form, FormStateInterface $form_state) {
+  public function submitForm(array &$form, FormStateInterface $form_state): void {
 
     // Need to get file details i.e upload file name, size etc.
 

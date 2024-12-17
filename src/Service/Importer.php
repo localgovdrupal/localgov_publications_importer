@@ -26,7 +26,7 @@ class Importer {
   /**
    * Imports the given file as a new Localgov Publication page.
    */
-  public function importPdf($pathToFile) {
+  public function importPdf($pathToFile): ?NodeInterface {
 
     $nodeStorage = $this->entityTypeManager->getStorage('node');
 

@@ -25,7 +25,7 @@ class PublicationImportForm extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container) {
+  public static function create(ContainerInterface $container): static {
     return new static(
       $container->get('entity_type.manager'),
       $container->get('localgov_publications_importer.importer')
@@ -72,7 +72,7 @@ class PublicationImportForm extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public function submitForm(array &$form, FormStateInterface $form_state) {
+  public function submitForm(array &$form, FormStateInterface $form_state): void {
 
     [$fid] = $form_state->getValue('my_file');
     $file = $this->entityTypeManager->getStorage('file')->load($fid);

@@ -8,25 +8,28 @@ use Drupal\paragraphs\Entity\Paragraph;
 use Smalot\PdfParser\Config as PdfParserConfig;
 use Smalot\PdfParser\Parser as PdfParser;
 
+/**
+ * Imports content from uploaded files.
+ */
 class Importer {
 
   /**
    * Constructor.
    */
   public function __construct(
-    protected EntityTypeManagerInterface $entityTypeManager
+    protected EntityTypeManagerInterface $entityTypeManager,
   ) {
   }
 
   /**
    * Imports the given file as a new Localgov Publication page.
    */
-  function importPdf($pathToFile): ?NodeInterface {
+  public function importPdf($pathToFile): ?NodeInterface {
 
     $nodeStorage = $this->entityTypeManager->getStorage('node');
 
     $config = new PdfParserConfig();
-    // An empty string can prevent words from breaking up
+    // An empty string can prevent words from breaking up.
     $config->setHorizontalOffset('');
 
     // Parse PDF file and build necessary objects.
@@ -45,7 +48,9 @@ class Importer {
 
     // Get the pages and sort them. They don't come back in order by default.
     $pages = $pdf->getPages();
-    usort($pages, function ($a, $b) { return intval($a->getPageNumber()) <=> intval($b->getPageNumber()); });
+    usort($pages, function ($a, $b) {
+      return intval($a->getPageNumber()) <=> intval($b->getPageNumber());
+    });
 
     $weight = 0;
 
@@ -79,7 +84,7 @@ class Importer {
       $client = \OpenAI::client('');
 
       $result = $client->chat()->create([
-        'model' => 'gpt-3.5-turbo', // Was gpt-4
+        'model' => 'gpt-3.5-turbo',
         'messages' => [
           [
             'role' => 'user',
@@ -87,7 +92,7 @@ class Importer {
           ],
           [
             'role' => 'system',
-            'content' => 'This plain text document has been stripped of its formatting. Please add the formatting back in, and give me the whole document back as valid HTML.'
+            'content' => 'This plain text document has been stripped of its formatting. Please add the formatting back in, and give me the whole document back as valid HTML.',
           ],
         ],
       ]);
@@ -107,14 +112,7 @@ class Importer {
   }
 
   /**
-   * Add field_section_body as a paragraph.
-   *
-   * @param \Drupal\node\NodeInterface $node
-   *   The destination node.
-   * @param array $source
-   *   Source data.
-   * @param string $sourceField
-   *   Source field to read.
+   * Add content to the given node as a paragraph.
    */
   public function addBodyAsParagraph(NodeInterface $node, string $text): void {
 

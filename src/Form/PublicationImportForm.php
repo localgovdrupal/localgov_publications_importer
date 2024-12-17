@@ -2,11 +2,12 @@
 
 namespace Drupal\localgov_publications_importer\Form;
 
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\localgov_publications_importer\Service\Importer as PublicationImporter;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Drupal\file\Entity\File;
+
 /**
  * Publication import form.
  */
@@ -16,6 +17,7 @@ class PublicationImportForm extends FormBase {
    * Constructor.
    */
   public function __construct(
+    protected EntityTypeManagerInterface $entityTypeManager,
     protected PublicationImporter $publicationImporter,
   ) {
   }
@@ -25,10 +27,10 @@ class PublicationImportForm extends FormBase {
    */
   public static function create(ContainerInterface $container): static {
     return new static(
+      $container->get('entity_type.manager'),
       $container->get('localgov_publications_importer.importer')
     );
   }
-
 
   /**
    * {@inheritdoc}
@@ -44,18 +46,18 @@ class PublicationImportForm extends FormBase {
 
     $form['#attributes'] = ['enctype' => 'multipart/form-data'];
 
-    $form['my_file'] = array(
+    $form['my_file'] = [
       '#type' => 'managed_file',
       '#name' => 'my_file',
-      '#title' => t('File *'),
+      '#title' => $this->t('File *'),
       '#size' => 20,
-      '#description' => t('PDF format only'),
+      '#description' => $this->t('PDF format only'),
       '#upload_validators' => [
         'file_validate_extensions' => ['pdf'],
       ],
-      // @todo: Upload to private.
+      // @todo Upload to private.
       '#upload_location' => 'public://my_files/',
-    );
+    ];
 
     $form['actions']['#type'] = 'actions';
     $form['actions']['submit'] = [
@@ -72,19 +74,14 @@ class PublicationImportForm extends FormBase {
    */
   public function submitForm(array &$form, FormStateInterface $form_state): void {
 
-    // Need to get file details i.e upload file name, size etc.
-
     [$fid] = $form_state->getValue('my_file');
-    $file = File::load($fid);
-
+    $file = $this->entityTypeManager->getStorage('file')->load($fid);
     $node = $this->publicationImporter->importPdf($file->uri->value);
 
     if ($node) {
-      // redirect to the node...
+      // Redirect to the node we created.
       $form_state->setRedirect('entity.node.canonical', ['node' => $node->id()]);
     }
-
-    // Else set a fail message
   }
 
 }

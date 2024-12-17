@@ -1,4 +1,7 @@
 # Publications Importer
+
+![Tests](https://github.com/localgovdrupal/localgov_publications_importer/actions/workflows/test.yml/badge.svg)
+
 Import PDFs into your localGov Drupal site as HTML publications automatically.
 
 Please join the #feature-publications-importer channel on LGD Slack to learn more about this.

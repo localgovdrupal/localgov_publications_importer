@@ -1,0 +1,17 @@
+name: Test localgovdrupal/localgov_publications_importer drupal-module
+
+on:
+  push:
+    branches:
+      - '1.x'
+  pull_request:
+    branches:
+      - '1.x'
+  workflow_dispatch:
+
+jobs:
+  tests:
+    uses: localgovdrupal/localgov_shared_workflows/.github/workflows/test-module.yml@1.x
+    with:
+      project: 'localgovdrupal/localgov_publications_importer'
+      project_path: 'web/modules/contrib/localgov_publications_importer'

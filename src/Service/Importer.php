@@ -9,6 +9,7 @@ use Smalot\PdfParser\Config as PdfParserConfig;
 use Smalot\PdfParser\Parser as PdfParser;
 use Drupal\ai\OperationType\Chat\ChatInput;
 use Drupal\ai\OperationType\Chat\ChatMessage;
+use Drupal\ai\AiProviderPluginManager;
 
 /**
  * Imports content from uploaded files.
@@ -20,6 +21,7 @@ class Importer {
    */
   public function __construct(
     protected EntityTypeManagerInterface $entityTypeManager,
+    protected AiProviderPluginManager $aiProvider,
   ) {
   }
 
@@ -83,11 +85,10 @@ class Importer {
       // of words. Swop these for spaces.
       $content = str_replace("\t\n", ' ', $page->getText());
 
-      // Find the default selected LLM
-      $sets = \Drupal::service('ai.provider')->getDefaultProviderForOperationType('chat');
+      // Find the default selected LLM:
+      $sets = $this->aiProvider->getDefaultProviderForOperationType('chat');
 
-      $service = \Drupal::service('ai.provider');
-      $provider = $service->createInstance($sets['provider_id']);
+      $provider = $this->aiProvider->createInstance($sets['provider_id']);
       $messages = new ChatInput([
         new chatMessage('system', 'This plain text document has been stripped of its formatting. Please add the formatting back in, and give me the whole document back as valid HTML.'),
         new chatMessage('user', $content),

@@ -6,3 +6,4 @@ core_version_requirement: ^9 || ^10
 
 dependencies:
   - localgov_publications:localgov_publications
+  - ai_provider_openai:ai_provider_openai

@@ -7,6 +7,9 @@ use Drupal\node\NodeInterface;
 use Drupal\paragraphs\Entity\Paragraph;
 use Smalot\PdfParser\Config as PdfParserConfig;
 use Smalot\PdfParser\Parser as PdfParser;
+use Drupal\ai\OperationType\Chat\ChatInput;
+use Drupal\ai\OperationType\Chat\ChatMessage;
+use Drupal\ai\AiProviderPluginManager;
 
 /**
  * Imports content from uploaded files.
@@ -18,6 +21,7 @@ class Importer {
    */
   public function __construct(
     protected EntityTypeManagerInterface $entityTypeManager,
+    protected AiProviderPluginManager $aiProvider,
   ) {
   }
 
@@ -81,23 +85,16 @@ class Importer {
       // of words. Swop these for spaces.
       $content = str_replace("\t\n", ' ', $page->getText());
 
-      $client = \OpenAI::client('');
+      // Find the default selected LLM:
+      $sets = $this->aiProvider->getDefaultProviderForOperationType('chat');
 
-      $result = $client->chat()->create([
-        'model' => 'gpt-3.5-turbo',
-        'messages' => [
-          [
-            'role' => 'user',
-            'content' => $content,
-          ],
-          [
-            'role' => 'system',
-            'content' => 'This plain text document has been stripped of its formatting. Please add the formatting back in, and give me the whole document back as valid HTML.',
-          ],
-        ],
+      $provider = $this->aiProvider->createInstance($sets['provider_id']);
+      $messages = new ChatInput([
+        new chatMessage('system', 'This plain text document has been stripped of its formatting. Please add the formatting back in, and give me the whole document back as valid HTML.'),
+        new chatMessage('user', $content),
       ]);
-
-      $content = $result->choices[0]->message->content;
+      $message = $provider->chat($messages, $sets['model_id'])->getNormalized();
+      $content = $message->getText();
 
       $this->addBodyAsParagraph($publicationPage, $content);
 

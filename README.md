@@ -8,3 +8,13 @@ Please join the #feature-publications-importer channel on LGD Slack to learn mor
 Don't install this in your production site yet.
 
 You can fund the development of this feature via the [LocalGov Drupal Community Fund](https://localgovdrupal.org/products/community-fund/pdf-import-discovery).
+
+
+Plugin structure:
+
+We work on an Import. This has an ImportInterface.
+
+Operations are what happens to an Import. These can be one of three types:
+  Extract: Plugin/LocalGovImporter/Extract
+  Transform: Plugin/LocalGovImporter/Transform
+  Save: Plugin/LocalGovImporter/Save

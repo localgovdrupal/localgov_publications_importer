@@ -1,4 +1,8 @@
 services:
   localgov_publications_importer.importer:
     class: Drupal\localgov_publications_importer\Service\Importer
-    arguments: ['@entity_type.manager','@ai.provider']
+    arguments: ['@entity_type.manager','@ai.provider', 'Drupal\localgov_publications_importer\ExtractOperationManager']
+  plugin.manager.localgov_importer.extract:
+    class: Drupal\localgov_publications_importer\ExtractOperationManager
+    parent: default_plugin_manager
+  Drupal\localgov_publications_importer\ExtractOperationManager: '@plugin.manager.localgov_importer.extract'

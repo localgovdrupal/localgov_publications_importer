@@ -3,6 +3,8 @@
 namespace Drupal\localgov_publications_importer\Service;
 
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\localgov_publications_importer\ExtractOperationManager;
+use Drupal\localgov_publications_importer\Plugin\ExtractInterface;
 use Drupal\node\NodeInterface;
 use Drupal\paragraphs\Entity\Paragraph;
 use Smalot\PdfParser\Config as PdfParserConfig;
@@ -22,6 +24,7 @@ class Importer {
   public function __construct(
     protected EntityTypeManagerInterface $entityTypeManager,
     protected AiProviderPluginManager $aiProvider,
+    protected ExtractOperationManager $extractOperationManager,
   ) {
   }
 
@@ -30,40 +33,22 @@ class Importer {
    */
   public function importPdf($pathToFile): ?NodeInterface {
 
-    $nodeStorage = $this->entityTypeManager->getStorage('node');
-
-    $config = new PdfParserConfig();
-    // An empty string can prevent words from breaking up.
-    $config->setHorizontalOffset('');
-
-    // Parse PDF file and build necessary objects.
-    $parser = new PdfParser([], $config);
-    $pdf = $parser->parseFile($pathToFile);
-
-    $title = 'Publication';
-
-    $details = $pdf->getDetails();
-
-    if (isset($details['Title'])) {
-      $title = $details['Title'];
-    }
+    $import = $this->extractOperation()
+      ->setSource($pathToFile)
+      ->getImport();
 
     $rootPage = NULL;
-
-    // Get the pages and sort them. They don't come back in order by default.
-    $pages = $pdf->getPages();
-    usort($pages, function ($a, $b) {
-      return intval($a->getPageNumber()) <=> intval($b->getPageNumber());
-    });
-
     $weight = 0;
 
-    foreach ($pages as $page) {
+    $nodeStorage = $this->entityTypeManager->getStorage('node');
+
+    foreach ($import->getPages() as $page) {
 
       if ($rootPage === NULL) {
         $book = [
           'bid' => 'new',
         ];
+        $title = $import->getTitle();
       }
       else {
         $book = [
@@ -130,6 +115,19 @@ class Importer {
     ];
 
     $node->get('localgov_publication_content')->setValue($paragraphList);
+  }
+
+  protected function extractOperation(): ExtractInterface {
+    $extractOperationDefinitions = $this->extractOperationManager->getDefinitions();
+
+    // @todo: There should only be one extract operation in this pipeline.
+    // Provide a way to choose it, and the other operations!
+    $extractOperationDefinition = reset($extractOperationDefinitions);
+
+    /** @var \Drupal\localgov_publications_importer\Plugin\ExtractInterface $extractOperation */
+    $extractOperation = $this->extractOperationManager->createInstance($extractOperationDefinition['id']);
+
+    return $extractOperation;
   }
 
 }

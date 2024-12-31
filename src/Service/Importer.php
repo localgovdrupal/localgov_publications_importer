@@ -35,9 +35,8 @@ class Importer {
       ->setSource($pathToFile)
       ->getImport();
 
-    // @todoL: Everything left in this loop should be a transform plugin.
+    // @todo Everything left in this loop should be a transform plugin.
     foreach ($import->getPages() as $page) {
-
 
       // One of the example PDFs I tried came out wth \t\n after every single
       // word, which rendered as line breaks and made the output a single column
@@ -65,7 +64,7 @@ class Importer {
   protected function extractOperation(): ExtractInterface {
     $extractOperationDefinitions = $this->extractOperationManager->getDefinitions();
 
-    // @todo: There should only be one extract operation in this pipeline.
+    // @todo There should only be one extract operation in this pipeline.
     // Provide a way to choose it, and the other operations!
     $extractOperationDefinition = reset($extractOperationDefinitions);
 
@@ -81,7 +80,7 @@ class Importer {
   protected function saveOperation(): SaveInterface {
     $saveOperationDefinitions = $this->saveOperationManager->getDefinitions();
 
-    // @todo: There should only be one save operation in this pipeline.
+    // @todo There should only be one save operation in this pipeline.
     // Provide a way to choose it, and the other operations!
     $saveOperationDefinition = reset($saveOperationDefinitions);
 

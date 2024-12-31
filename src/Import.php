@@ -23,7 +23,7 @@ class Import {
 
   /**
    * Array of pages.
-   * 
+   *
    * @var array
    */
   protected array $pages = [];

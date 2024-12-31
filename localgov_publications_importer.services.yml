@@ -6,3 +6,7 @@ services:
     class: Drupal\localgov_publications_importer\ExtractOperationManager
     parent: default_plugin_manager
   Drupal\localgov_publications_importer\ExtractOperationManager: '@plugin.manager.localgov_importer.extract'
+  plugin.manager.localgov_importer.save:
+    class: Drupal\localgov_publications_importer\SaveOperationManager
+    parent: default_plugin_manager
+  Drupal\localgov_publications_importer\SaveOperationManager: '@plugin.manager.localgov_importer.save'

@@ -33,11 +33,4 @@ class ExtractOperationManager extends DefaultPluginManager {
     $this->setCacheBackend($cache_backend, 'localgov_importer_extract_operations');
   }
 
-//  /**
-//   * {@inheritdoc}
-//   */
-//  protected function getType() {
-//    return 'extract_operation';
-//  }
-
 }

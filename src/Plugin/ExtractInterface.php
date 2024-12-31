@@ -10,9 +10,18 @@ use Drupal\localgov_publications_importer\Import;
  * Accepts a file, and returns an Import object.
  */
 interface ExtractInterface {
-  // Accepts a file?
-  function setSource(string $pathToFile): self;
+
+  /**
+   * Accepts a file.
+   *
+   * @param string $pathToFile
+   *   Path to the file.
+   *
+   * @return $this
+   */
+  public function setSource(string $pathToFile): self;
 
   // Returns an import.
-  function getImport(): ?Import;
+  public function getImport(): ?Import;
+
 }

@@ -2,13 +2,11 @@
 
 namespace Drupal\localgov_publications_importer\Service;
 
-use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\localgov_publications_importer\ExtractOperationManager;
 use Drupal\localgov_publications_importer\Plugin\ExtractInterface;
+use Drupal\localgov_publications_importer\Plugin\SaveInterface;
+use Drupal\localgov_publications_importer\SaveOperationManager;
 use Drupal\node\NodeInterface;
-use Drupal\paragraphs\Entity\Paragraph;
-use Smalot\PdfParser\Config as PdfParserConfig;
-use Smalot\PdfParser\Parser as PdfParser;
 use Drupal\ai\OperationType\Chat\ChatInput;
 use Drupal\ai\OperationType\Chat\ChatMessage;
 use Drupal\ai\AiProviderPluginManager;
@@ -22,9 +20,9 @@ class Importer {
    * Constructor.
    */
   public function __construct(
-    protected EntityTypeManagerInterface $entityTypeManager,
     protected AiProviderPluginManager $aiProvider,
     protected ExtractOperationManager $extractOperationManager,
+    protected SaveOperationManager $saveOperationManager,
   ) {
   }
 
@@ -37,33 +35,9 @@ class Importer {
       ->setSource($pathToFile)
       ->getImport();
 
-    $rootPage = NULL;
-    $weight = 0;
-
-    $nodeStorage = $this->entityTypeManager->getStorage('node');
-
+    // @todoL: Everything left in this loop should be a transform plugin.
     foreach ($import->getPages() as $page) {
 
-      if ($rootPage === NULL) {
-        $book = [
-          'bid' => 'new',
-        ];
-        $title = $import->getTitle();
-      }
-      else {
-        $book = [
-          'bid' => $rootPage->id(),
-          'pid' => $rootPage->id(),
-          'weight' => $weight++,
-        ];
-        $title = 'Page ' . $page->getPageNumber();
-      }
-
-      $publicationPage = $nodeStorage->create([
-        'type' => 'localgov_publication_page',
-        'title' => $title,
-        'book' => $book,
-      ]);
 
       // One of the example PDFs I tried came out wth \t\n after every single
       // word, which rendered as line breaks and made the output a single column
@@ -80,43 +54,14 @@ class Importer {
       ]);
       $message = $provider->chat($messages, $sets['model_id'])->getNormalized();
       $content = $message->getText();
-
-      $this->addBodyAsParagraph($publicationPage, $content);
-
-      $publicationPage->save();
-
-      if ($rootPage === NULL) {
-        $rootPage = $publicationPage;
-      }
     }
 
-    return $rootPage;
+    return $this->saveOperation()->import($import);
   }
 
   /**
-   * Add content to the given node as a paragraph.
+   * Gets the extract operation to use.
    */
-  public function addBodyAsParagraph(NodeInterface $node, string $text): void {
-
-    // Create the paragraph that holds the text. NB that both the paragraph
-    // and the field on it are called 'localgov_text'.
-    $paragraph = Paragraph::create([
-      'type' => 'localgov_text',
-      'localgov_text' => [
-        'value' => $text,
-        'format' => 'wysiwyg',
-      ],
-    ]);
-    $paragraph->save();
-
-    $paragraphList[] = [
-      'target_id' => $paragraph->id(),
-      'target_revision_id' => $paragraph->getRevisionId(),
-    ];
-
-    $node->get('localgov_publication_content')->setValue($paragraphList);
-  }
-
   protected function extractOperation(): ExtractInterface {
     $extractOperationDefinitions = $this->extractOperationManager->getDefinitions();
 
@@ -128,6 +73,22 @@ class Importer {
     $extractOperation = $this->extractOperationManager->createInstance($extractOperationDefinition['id']);
 
     return $extractOperation;
+  }
+
+  /**
+   * Gets the save operation to use.
+   */
+  protected function saveOperation(): SaveInterface {
+    $saveOperationDefinitions = $this->saveOperationManager->getDefinitions();
+
+    // @todo: There should only be one save operation in this pipeline.
+    // Provide a way to choose it, and the other operations!
+    $saveOperationDefinition = reset($saveOperationDefinitions);
+
+    /** @var \Drupal\localgov_publications_importer\Plugin\SaveInterface $saveOperation */
+    $saveOperation = $this->extractOperationManager->createInstance($saveOperationDefinition['id']);
+
+    return $saveOperation;
   }
 
 }

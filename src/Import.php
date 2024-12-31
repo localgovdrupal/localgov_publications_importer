@@ -27,7 +27,7 @@ class Import {
     $this->pathToFile = $pathToFile;
   }
 
-  public function setTitle(string $title) {
+  public function setTitle(string $title): void {
     $this->title = $title;
   }
 
@@ -35,7 +35,7 @@ class Import {
     return $this->title;
   }
 
-  public function setPages(array $pages) {
+  public function setPages(array $pages): void {
     $this->pages = $pages;
   }
 

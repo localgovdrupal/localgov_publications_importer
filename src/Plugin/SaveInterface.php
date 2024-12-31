@@ -18,4 +18,5 @@ interface SaveInterface {
    * Returns a Node on success, null otherwise.
    */
   public function import(Import $import): ?NodeInterface;
+
 }

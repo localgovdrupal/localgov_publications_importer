@@ -21,7 +21,12 @@ interface ExtractInterface {
    */
   public function setSource(string $pathToFile): self;
 
-  // Returns an import.
+  /**
+   * Creates a new Import object with the extracted content.
+   *
+   * @return ?Import
+   *   The new import.
+   */
   public function getImport(): ?Import;
 
 }

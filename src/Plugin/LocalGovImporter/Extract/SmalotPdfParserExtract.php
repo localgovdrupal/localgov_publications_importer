@@ -61,8 +61,8 @@ class SmalotPdfParserExtract extends PluginBase implements ExtractInterface {
       return intval($a->getPageNumber()) <=> intval($b->getPageNumber());
     });
 
-    // @todo: We need our own page representation so the whole project isn't
-    // tied to what smalot/pdfparser does.
+    // @todo Add our own page representation so the whole project isn't tied to
+    // what smalot/pdfparser does.
     $import->setPages($pages);
 
     return $import;

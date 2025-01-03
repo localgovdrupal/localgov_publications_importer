@@ -6,6 +6,7 @@ use Drupal\Component\Plugin\PluginBase;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\localgov_publications_importer\Attribute\Extract;
 use Drupal\localgov_publications_importer\Import;
+use Drupal\localgov_publications_importer\Page;
 use Drupal\localgov_publications_importer\Plugin\ExtractInterface;
 use Smalot\PdfParser\Config as PdfParserConfig;
 use Smalot\PdfParser\Parser as PdfParser;
@@ -56,14 +57,17 @@ class SmalotPdfParserExtract extends PluginBase implements ExtractInterface {
     }
 
     // Get the pages and sort them. They don't come back in order by default.
-    $pages = $pdf->getPages();
-    usort($pages, function ($a, $b) {
+    $pdfPages = $pdf->getPages();
+    usort($pdfPages, function ($a, $b) {
       return intval($a->getPageNumber()) <=> intval($b->getPageNumber());
     });
 
-    // @todo Add our own page representation so the whole project isn't tied to
-    // what smalot/pdfparser does.
-    $import->setPages($pages);
+    foreach ($pdfPages as $pdfPage) {
+      $page = new Page();
+      $page->setTitle('Page ' . $pdfPage->getPageNumber());
+      $page->setContent($pdfPage->getText());
+      $import->addPage($page);
+    }
 
     return $import;
   }

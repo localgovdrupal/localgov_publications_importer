@@ -24,7 +24,7 @@ class Import {
   /**
    * Array of pages.
    *
-   * @var array
+   * @var Page[]
    */
   protected array $pages = [];
 
@@ -51,6 +51,9 @@ class Import {
 
   /**
    * Set the pages of the import.
+   *
+   * @param Page[] $pages
+   *   Array of pages.
    */
   public function setPages(array $pages): void {
     $this->pages = $pages;
@@ -61,6 +64,13 @@ class Import {
    */
   public function getPages(): array {
     return $this->pages;
+  }
+
+  /**
+   * Add a new page to this import.
+   */
+  public function addPage(Page $page): void {
+    $this->pages[] = $page;
   }
 
 }

@@ -81,7 +81,7 @@ class Importer {
     $operationDefinition = reset($operationDefinitions);
 
     /** @var \Drupal\localgov_publications_importer\Plugin\SaveInterface $operation */
-    $operation = $this->extractOperationManager->createInstance($operationDefinition['id']);
+    $operation = $this->saveOperationManager->createInstance($operationDefinition['id']);
 
     return $operation;
   }

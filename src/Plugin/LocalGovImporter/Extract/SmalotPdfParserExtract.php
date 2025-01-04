@@ -52,8 +52,13 @@ class SmalotPdfParserExtract extends PluginBase implements ExtractInterface {
     $import = new Import($this->pathToFile);
 
     $details = $pdf->getDetails();
-    if (isset($details['Title'])) {
+    if (isset($details['Title']) && $details['Title'] !== '') {
       $import->setTitle($details['Title']);
+    }
+    else {
+      // Fall back to the filename if we can't find a title in the PDF.
+      // This isn't ideal, but we need to have a title to save a node.
+      $import->setTitle(basename($this->pathToFile));
     }
 
     // Get the pages and sort them. They don't come back in order by default.

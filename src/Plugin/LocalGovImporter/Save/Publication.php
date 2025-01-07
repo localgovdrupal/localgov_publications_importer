@@ -7,7 +7,7 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\localgov_publications_importer\Attribute\Save;
-use Drupal\localgov_publications_importer\Import;
+use Drupal\localgov_publications_importer\ImportInterface;
 use Drupal\localgov_publications_importer\Plugin\SaveInterface;
 use Drupal\node\NodeInterface;
 use Drupal\paragraphs\Entity\Paragraph;
@@ -50,7 +50,7 @@ class Publication extends PluginBase implements SaveInterface, ContainerFactoryP
   /**
    * {@inheritDoc}
    */
-  public function import(Import $import): ?NodeInterface {
+  public function import(ImportInterface $import): ?NodeInterface {
 
     $rootPage = NULL;
     $weight = 0;

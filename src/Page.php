@@ -5,7 +5,7 @@ namespace Drupal\localgov_publications_importer;
 /**
  * Represents a single page of content being imported.
  */
-class Page {
+class Page implements PageInterface {
 
   /**
    * Title of the page.
@@ -22,28 +22,28 @@ class Page {
   protected string $content = '';
 
   /**
-   * Set the title of the import.
+   * {@inheritdoc}
    */
   public function setTitle(string $title): void {
     $this->title = $title;
   }
 
   /**
-   * Get the title of the import.
+   * {@inheritdoc}
    */
   public function getTitle(): string {
     return $this->title;
   }
 
   /**
-   * Set the content of the page.
+   * {@inheritdoc}
    */
   public function setContent(string $content): void {
     $this->content = $content;
   }
 
   /**
-   * Get the content of the page.
+   * {@inheritdoc}
    */
   public function getContent(): string {
     return $this->content;

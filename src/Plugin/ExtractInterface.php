@@ -2,7 +2,7 @@
 
 namespace Drupal\localgov_publications_importer\Plugin;
 
-use Drupal\localgov_publications_importer\Import;
+use Drupal\localgov_publications_importer\ImportInterface;
 
 /**
  * Interface for Extract Operation plugins.
@@ -24,9 +24,9 @@ interface ExtractInterface {
   /**
    * Creates a new Import object with the extracted content.
    *
-   * @return ?Import
+   * @return ?\Drupal\localgov_publications_importer\ImportInterface
    *   The new import.
    */
-  public function getImport(): ?Import;
+  public function getImport(): ?ImportInterface;
 
 }

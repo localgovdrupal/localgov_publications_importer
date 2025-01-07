@@ -8,7 +8,7 @@ use Drupal\ai\OperationType\Chat\ChatMessage;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\localgov_publications_importer\Attribute\Transform;
-use Drupal\localgov_publications_importer\Page;
+use Drupal\localgov_publications_importer\PageInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -48,7 +48,7 @@ class ChatGPT extends TransformPluginBase implements ContainerFactoryPluginInter
   /**
    * {@inheritDoc}
    */
-  public function transformPage(Page $page): void {
+  public function transformPage(PageInterface $page): void {
 
     $sets = $this->aiProvider->getDefaultProviderForOperationType('chat');
 

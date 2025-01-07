@@ -3,8 +3,8 @@
 namespace Drupal\localgov_publications_importer\Plugin\LocalGovImporter\Transform;
 
 use Drupal\Component\Plugin\PluginBase;
-use Drupal\localgov_publications_importer\Import;
-use Drupal\localgov_publications_importer\Page;
+use Drupal\localgov_publications_importer\ImportInterface;
+use Drupal\localgov_publications_importer\PageInterface;
 use Drupal\localgov_publications_importer\Plugin\TransformInterface;
 
 /**
@@ -19,7 +19,7 @@ abstract class TransformPluginBase extends PluginBase implements TransformInterf
   /**
    * {@inheritDoc}
    */
-  public function transform(Import $import): void {
+  public function transform(ImportInterface $import): void {
 
     foreach ($import->getPages() as $page) {
       $this->transformPage($page);
@@ -31,7 +31,7 @@ abstract class TransformPluginBase extends PluginBase implements TransformInterf
    *
    * If you just want to act on a single page, implement this in your plugin.
    */
-  protected function transformPage(Page $page): void {
+  protected function transformPage(PageInterface $page): void {
     $page->setContent($this->transformContent($page->getContent()));
   }
 

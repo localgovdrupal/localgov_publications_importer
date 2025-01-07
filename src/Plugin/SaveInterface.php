@@ -2,7 +2,7 @@
 
 namespace Drupal\localgov_publications_importer\Plugin;
 
-use Drupal\localgov_publications_importer\Import;
+use Drupal\localgov_publications_importer\ImportInterface;
 use Drupal\node\NodeInterface;
 
 /**
@@ -17,6 +17,6 @@ interface SaveInterface {
    *
    * Returns a Node on success, null otherwise.
    */
-  public function import(Import $import): ?NodeInterface;
+  public function import(ImportInterface $import): ?NodeInterface;
 
 }

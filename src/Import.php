@@ -5,7 +5,7 @@ namespace Drupal\localgov_publications_importer;
 /**
  * Represents content being imported.
  */
-class Import {
+class Import implements ImportInterface {
 
   /**
    * Path to the original file.
@@ -24,7 +24,7 @@ class Import {
   /**
    * Array of pages.
    *
-   * @var Page[]
+   * @var \Drupal\localgov_publications_importer\PageInterface[]
    */
   protected array $pages = [];
 
@@ -36,40 +36,37 @@ class Import {
   }
 
   /**
-   * Set the title of the import.
+   * {@inheritdoc}
    */
   public function setTitle(string $title): void {
     $this->title = $title;
   }
 
   /**
-   * Get the title of the import.
+   * {@inheritdoc}
    */
   public function getTitle(): string {
     return $this->title;
   }
 
   /**
-   * Set the pages of the import.
-   *
-   * @param Page[] $pages
-   *   Array of pages.
+   * {@inheritdoc}
    */
   public function setPages(array $pages): void {
     $this->pages = $pages;
   }
 
   /**
-   * Get the pages of the import.
+   * {@inheritdoc}
    */
   public function getPages(): array {
     return $this->pages;
   }
 
   /**
-   * Add a new page to this import.
+   * {@inheritdoc}
    */
-  public function addPage(Page $page): void {
+  public function addPage(PageInterface $page): void {
     $this->pages[] = $page;
   }
 

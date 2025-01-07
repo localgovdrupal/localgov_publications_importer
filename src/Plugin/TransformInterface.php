@@ -2,7 +2,7 @@
 
 namespace Drupal\localgov_publications_importer\Plugin;
 
-use Drupal\localgov_publications_importer\Import;
+use Drupal\localgov_publications_importer\ImportInterface;
 
 /**
  * Interface for Transform Operation plugins.
@@ -14,6 +14,6 @@ interface TransformInterface {
   /**
    * Transform the content.
    */
-  public function transform(Import $import): void;
+  public function transform(ImportInterface $import): void;
 
 }

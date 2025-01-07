@@ -6,6 +6,7 @@ use Drupal\Component\Plugin\PluginBase;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\localgov_publications_importer\Attribute\Extract;
 use Drupal\localgov_publications_importer\Import;
+use Drupal\localgov_publications_importer\ImportInterface;
 use Drupal\localgov_publications_importer\Page;
 use Drupal\localgov_publications_importer\Plugin\ExtractInterface;
 use Smalot\PdfParser\Config as PdfParserConfig;
@@ -39,7 +40,7 @@ class SmalotPdfParserExtract extends PluginBase implements ExtractInterface {
   /**
    * {@inheritDoc}
    */
-  public function getImport(): ?Import {
+  public function getImport(): ?ImportInterface {
 
     $config = new PdfParserConfig();
     // An empty string can prevent words from breaking up.

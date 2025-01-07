@@ -10,11 +10,25 @@ Don't install this in your production site yet.
 You can fund the development of this feature via the [LocalGov Drupal Community Fund](https://localgovdrupal.org/products/community-fund/pdf-import-discovery).
 
 
-Plugin structure:
-
-We work on an Import. This has an ImportInterface.
+## Architecture
+We work on an Import. This is a class that implements ImportInterface. It has a
+number of Pages, which implement PageInterface. Extracted content is put in 
+Pages in an Import, and passed to the other plugins via the importer to complete
+the import process.
 
 Operations are what happens to an Import. These can be one of three types:
   Extract: Plugin/LocalGovImporter/Extract
   Transform: Plugin/LocalGovImporter/Transform
   Save: Plugin/LocalGovImporter/Save
+
+The process must include one extract operation and one save operation. Transform
+operations are optional, and there can be any number of them.
+
+As each operation is implemented in plugins, you can customise the import 
+process to meet your requirements.
+
+## Maintainers
+
+This project is currently maintained by:
+
+- Rupert Jabelman: https://www.drupal.org/u/rupertj

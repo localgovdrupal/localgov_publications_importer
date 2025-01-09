@@ -12,14 +12,14 @@ use Drupal\localgov_publications_importer\PageInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- * Transform operation to Transform content as an HTML publication.
+ * Transform operation that uses AI to clean up content.
  */
 #[Transform(
-  id: 'transform_chatgpt',
-  label: new TranslatableMarkup('ChatGPT'),
-  description: new TranslatableMarkup('Uses ChatGPT to reintroduce missing document structure.')
+  id: 'transform_ai',
+  label: new TranslatableMarkup('AI'),
+  description: new TranslatableMarkup('Uses AI to reintroduce missing document structure.')
 )]
-class ChatGPT extends TransformPluginBase implements ContainerFactoryPluginInterface {
+class AI extends TransformPluginBase implements ContainerFactoryPluginInterface {
 
   /**
    * {@inheritdoc}

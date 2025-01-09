@@ -30,14 +30,15 @@ you'll need to get an API key from OpenAI, then:
 
 Now repeat the steps to upload a PDF from before. You'll notice that the form submission takes longer, and the results are cleaned up compared to what they were previously like.
 
+## Plugin structure:
 
+This module is designed to be customisable. You can either write your own plugins to affect how content is imported, or use Drupal modules that provide plugins.
 
-
-Plugin structure:
-
-We work on an Import. This has an ImportInterface.
+We work on an instance of ImportInterface, which is passed between plugins. There's a default implementation called Import, but you can use your own if you like.
 
 Operations are what happens to an Import. These can be one of three types:
-  Extract: Plugin/LocalGovImporter/Extract
-  Transform: Plugin/LocalGovImporter/Transform
-  Save: Plugin/LocalGovImporter/Save
+* Extract: Plugin/LocalGovImporter/Extract
+* Transform: Plugin/LocalGovImporter/Transform
+* Save: Plugin/LocalGovImporter/Save
+
+Content is extracted from the uploaded file by an Extract plugin, and placed on an Import object. It's then transformed by any number of Transform plugins, and saved by a Save plugin.

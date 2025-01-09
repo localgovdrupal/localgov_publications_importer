@@ -52,6 +52,13 @@ class ChatGPT extends TransformPluginBase implements ContainerFactoryPluginInter
 
     $sets = $this->aiProvider->getDefaultProviderForOperationType('chat');
 
+    // If there's no AI provider returned, don't try to use one.
+    // @todo Consider better ways to handle this.
+    // Log an error? Show a flash message?
+    if (is_null($sets)) {
+      return;
+    }
+
     $provider = $this->aiProvider->createInstance($sets['provider_id']);
     $messages = new ChatInput([
       new chatMessage('system', 'This plain text document has been stripped of its formatting. Please add the formatting back in, and give me the whole document back as valid HTML.'),

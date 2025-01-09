@@ -27,4 +27,14 @@ interface PageInterface {
    */
   public function getContent(): string;
 
+  /**
+   * Set the poge number.
+   */
+  public function setPageNumber(int $pageNumber): void;
+
+  /**
+   * Get the poge number.
+   */
+  public function getPageNumber(): ?int;
+
 }

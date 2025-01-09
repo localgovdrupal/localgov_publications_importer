@@ -22,6 +22,13 @@ class Page implements PageInterface {
   protected string $content = '';
 
   /**
+   * Page number.
+   *
+   * @var int|null
+   */
+  protected ?int $pageNumber = NULL;
+
+  /**
    * {@inheritdoc}
    */
   public function setTitle(string $title): void {
@@ -47,6 +54,20 @@ class Page implements PageInterface {
    */
   public function getContent(): string {
     return $this->content;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setPageNumber(int $pageNumber): void {
+    $this->pageNumber = $pageNumber;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getPageNumber(): ?int {
+    return $this->pageNumber;
   }
 
 }

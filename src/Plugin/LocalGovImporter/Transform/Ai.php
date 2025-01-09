@@ -19,7 +19,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
   label: new TranslatableMarkup('AI'),
   description: new TranslatableMarkup('Uses AI to reintroduce missing document structure.')
 )]
-class AI extends TransformPluginBase implements ContainerFactoryPluginInterface {
+class Ai extends TransformPluginBase implements ContainerFactoryPluginInterface {
 
   /**
    * {@inheritdoc}

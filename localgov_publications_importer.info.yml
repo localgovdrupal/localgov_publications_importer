@@ -5,5 +5,6 @@ package: LocalGov Drupal
 core_version_requirement: ^9 || ^10
 
 dependencies:
+  - paragraphs:paragraphs
   - localgov_publications:localgov_publications
   - ai_provider_openai:ai_provider_openai

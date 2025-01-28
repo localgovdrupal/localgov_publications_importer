@@ -1,0 +1,71 @@
+<?php
+
+namespace Drupal\localgov_publications_importer\Plugin\LocalGovImporter\Transform;
+
+use Drupal\ai\AiProviderPluginManager;
+use Drupal\ai\OperationType\Chat\ChatInput;
+use Drupal\ai\OperationType\Chat\ChatMessage;
+use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\localgov_publications_importer\Attribute\Transform;
+use Drupal\localgov_publications_importer\PageInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
+
+/**
+ * Transform operation that uses AI to clean up content.
+ */
+#[Transform(
+  id: 'transform_ai',
+  label: new TranslatableMarkup('AI'),
+  description: new TranslatableMarkup('Uses AI to reintroduce missing document structure.')
+)]
+class Ai extends TransformPluginBase implements ContainerFactoryPluginInterface {
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
+    return new static(
+      $configuration,
+      $plugin_id,
+      $plugin_definition,
+      $container->get('ai.provider')
+    );
+  }
+
+  /**
+   * Constructor.
+   */
+  public function __construct(
+    array $configuration,
+    $plugin_id,
+    $plugin_definition,
+    protected AiProviderPluginManager $aiProvider,
+  ) {
+    parent::__construct($configuration, $plugin_id, $plugin_definition);
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  public function transformPage(PageInterface $page): void {
+
+    $sets = $this->aiProvider->getDefaultProviderForOperationType('chat');
+
+    // If there's no AI provider returned, don't try to use one.
+    // @todo Consider better ways to handle this.
+    // Log an error? Show a flash message?
+    if (is_null($sets)) {
+      return;
+    }
+
+    $provider = $this->aiProvider->createInstance($sets['provider_id']);
+    $messages = new ChatInput([
+      new chatMessage('system', 'This plain text document has been stripped of its formatting. Please add the formatting back in, and give me the whole document back as valid HTML.'),
+      new chatMessage('user', $page->getContent()),
+    ]);
+    $message = $provider->chat($messages, $sets['model_id'])->getNormalized();
+    $page->setContent($message->getText());
+  }
+
+}

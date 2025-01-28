@@ -1,4 +1,16 @@
 services:
   localgov_publications_importer.importer:
     class: Drupal\localgov_publications_importer\Service\Importer
-    arguments: ['@entity_type.manager','@ai.provider']
+    arguments: ['@Drupal\localgov_publications_importer\ExtractOperationManager', '@Drupal\localgov_publications_importer\TransformOperationManager', '@Drupal\localgov_publications_importer\SaveOperationManager']
+  plugin.manager.localgov_importer.extract:
+    class: Drupal\localgov_publications_importer\ExtractOperationManager
+    parent: default_plugin_manager
+  Drupal\localgov_publications_importer\ExtractOperationManager: '@plugin.manager.localgov_importer.extract'
+  plugin.manager.localgov_importer.transform:
+    class: Drupal\localgov_publications_importer\TransformOperationManager
+    parent: default_plugin_manager
+  Drupal\localgov_publications_importer\TransformOperationManager: '@plugin.manager.localgov_importer.transform'
+  plugin.manager.localgov_importer.save:
+    class: Drupal\localgov_publications_importer\SaveOperationManager
+    parent: default_plugin_manager
+  Drupal\localgov_publications_importer\SaveOperationManager: '@plugin.manager.localgov_importer.save'

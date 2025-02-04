@@ -22,4 +22,5 @@ interface TransformInterface {
    * Low numbers will be run before higher numbers.
    */
   public function order(): int;
+
 }

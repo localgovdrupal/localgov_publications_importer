@@ -9,6 +9,7 @@ use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\localgov_publications_importer\Attribute\Transform;
 use Drupal\localgov_publications_importer\PageInterface;
+use Masterminds\HTML5;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -72,7 +73,32 @@ class Ai extends TransformPluginBase implements ContainerFactoryPluginInterface 
       new chatMessage('user', $page->getContent()),
     ]);
     $message = $provider->chat($messages, $sets['model_id'])->getNormalized();
+
+    // This is a fallback. It'll be overwritten below if we find a title element
+    // in the returned message.
     $page->setContent($message->getText());
+
+    $html5 = new HTML5(['disable_html_ns' => TRUE, 'encoding' => 'UTF-8']);
+    $dom = $html5->loadHTML($message->getText());
+
+    // Use the contents of <title> for the page title.
+    $title = $dom->getElementsByTagName('title')->item(0);
+    if ($title instanceof \DOMNode) {
+      $page->setTitle($title->nodeValue);
+    }
+
+    // Remove <footer>.
+    $footer = $dom->getElementsByTagName('footer')->item(0);
+    if ($footer instanceof \DOMNode) {
+      $footer->parentNode->removeChild($footer);
+    }
+
+    // Use the contents of the <body> for the content.
+    $body = $dom->getElementsByTagName('body')->item(0);
+    if ($body instanceof \DOMNode) {
+      $content = $dom->saveHTML($body);
+      $page->setContent($content);
+    }
   }
 
 }

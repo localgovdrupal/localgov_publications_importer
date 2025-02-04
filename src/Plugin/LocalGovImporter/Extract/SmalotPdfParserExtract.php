@@ -69,9 +69,16 @@ class SmalotPdfParserExtract extends PluginBase implements ExtractInterface {
     });
 
     foreach ($pdfPages as $pdfPage) {
+
+      // Don't add empty pages.
+      $content = trim($pdfPage->getText());
+      if ($content === '') {
+        continue;
+      }
+
       $page = new Page();
       $page->setTitle('Page ' . $pdfPage->getPageNumber());
-      $page->setContent($pdfPage->getText());
+      $page->setContent($content);
       $page->setPageNumber($pdfPage->getPageNumber());
       $import->addPage($page);
     }

@@ -16,4 +16,10 @@ interface TransformInterface {
    */
   public function transform(ImportInterface $import): void;
 
+  /**
+   * The order this plugin should run in.
+   *
+   * Low numbers will be run before higher numbers.
+   */
+  public function order(): int;
 }

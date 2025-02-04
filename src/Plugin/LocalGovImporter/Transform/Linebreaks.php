@@ -19,7 +19,7 @@ class Linebreaks extends TransformPluginBase {
    * Replace unwanted whitespace in the content with a space.
    */
   public function transformContent(string $content): string {
-    return str_replace("\t\n", ' ', $content);
+    return trim(str_replace("\t\n", ' ', $content));
   }
 
   /**

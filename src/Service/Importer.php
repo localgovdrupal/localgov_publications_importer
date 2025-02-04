@@ -5,6 +5,7 @@ namespace Drupal\localgov_publications_importer\Service;
 use Drupal\localgov_publications_importer\ExtractOperationManager;
 use Drupal\localgov_publications_importer\Plugin\ExtractInterface;
 use Drupal\localgov_publications_importer\Plugin\SaveInterface;
+use Drupal\localgov_publications_importer\Plugin\TransformInterface;
 use Drupal\localgov_publications_importer\SaveOperationManager;
 use Drupal\localgov_publications_importer\TransformOperationManager;
 use Drupal\node\NodeInterface;
@@ -67,6 +68,11 @@ class Importer {
     foreach ($this->transformOperationManager->getDefinitions() as $operationDefinition) {
       $operations[] = $this->transformOperationManager->createInstance($operationDefinition['id']);
     }
+
+    usort($operations, function (TransformInterface $a, TransformInterface $b) {
+      return $a->order() <=> $b->order();
+    });
+
     return $operations;
   }
 

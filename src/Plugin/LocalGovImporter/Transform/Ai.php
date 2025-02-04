@@ -48,6 +48,13 @@ class Ai extends TransformPluginBase implements ContainerFactoryPluginInterface 
   /**
    * {@inheritDoc}
    */
+  public function order(): int {
+    return 40;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
   public function transformPage(PageInterface $page): void {
 
     $sets = $this->aiProvider->getDefaultProviderForOperationType('chat');

@@ -62,7 +62,6 @@ class Publication extends PluginBase implements SaveInterface, ContainerFactoryP
         $book = [
           'bid' => 'new',
         ];
-        $title = $import->getTitle();
       }
       else {
         $book = [
@@ -70,12 +69,12 @@ class Publication extends PluginBase implements SaveInterface, ContainerFactoryP
           'pid' => $rootPage->id(),
           'weight' => $weight++,
         ];
-        $title = 'Page ' . $page->getPageNumber();
       }
 
+      /** @var \Drupal\node\NodeInterface $publicationPage */
       $publicationPage = $nodeStorage->create([
         'type' => 'localgov_publication_page',
-        'title' => $title,
+        'title' => $page->getTitle(),
         'book' => $book,
       ]);
 
@@ -90,12 +89,12 @@ class Publication extends PluginBase implements SaveInterface, ContainerFactoryP
       ]);
       $paragraph->save();
 
-      $paragraphList[] = [
-        'target_id' => $paragraph->id(),
-        'target_revision_id' => $paragraph->getRevisionId(),
-      ];
-
-      $publicationPage->get('localgov_publication_content')->setValue($paragraphList);
+      $publicationPage->get('localgov_publication_content')->setValue([
+        [
+          'target_id' => $paragraph->id(),
+          'target_revision_id' => $paragraph->getRevisionId(),
+        ],
+      ]);
 
       $publicationPage->save();
 

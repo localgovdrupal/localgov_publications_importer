@@ -87,7 +87,7 @@ class Importer {
   /**
    * Gets the IDs of the transform operations to use.
    */
-  public function getTransformPluginIds() {
+  public function getTransformPluginIds(): array {
     $ids = [];
     $operations = $this->transformOperations();
     foreach ($operations as $operation) {

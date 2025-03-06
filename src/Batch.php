@@ -20,14 +20,14 @@ class Batch {
   /**
    * Runs the extract plugin.
    */
-  public static function extract(string $filename, array &$context) {
+  public static function extract(string $filename, array &$context): void {
     $context['results']['import'] = self::importer()->extract($filename);
   }
 
   /**
    * Runs the transform plugins, one page at a time.
    */
-  public static function transform(array &$context) {
+  public static function transform(array &$context): void {
 
     $importer = self::importer();
 
@@ -59,7 +59,7 @@ class Batch {
   /**
    * Runs the save plugin.
    */
-  public static function save(array &$context) {
+  public static function save(array &$context): void {
     // We might not be importing to nodes, eventually... Generalise this.
     $node = self::importer()->save($context['results']['import']);
     $context['results']['redirect'] = '/node/' . $node->id();
@@ -68,7 +68,7 @@ class Batch {
   /**
    * Batch is finished.
    */
-  public static function finished(bool $success, array $results, array $operations, string $elapsed) {
+  public static function finished(bool $success, array $results, array $operations, string $elapsed): ?RedirectResponse {
 
     if ($success) {
       \Drupal::messenger()->addMessage("Import complete. Here is your publication.");
@@ -77,6 +77,8 @@ class Batch {
     else {
       // @todo Handle failure.
     }
+
+    return NULL;
   }
 
 }

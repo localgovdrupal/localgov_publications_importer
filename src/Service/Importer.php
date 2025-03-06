@@ -10,7 +10,6 @@ use Drupal\localgov_publications_importer\Plugin\SaveInterface;
 use Drupal\localgov_publications_importer\Plugin\TransformInterface;
 use Drupal\localgov_publications_importer\SaveOperationManager;
 use Drupal\localgov_publications_importer\TransformOperationManager;
-use Drupal\migrate\Plugin\migrate\destination\Entity;
 use Drupal\node\NodeInterface;
 
 /**
@@ -30,7 +29,8 @@ class Importer {
 
   /**
    * Imports the given file as a new LocalGov Publication page.
-   * @deprecated As we don't really want to run batches all in one go.
+   *
+   * Call this to import a PDF in one go, which is probably a bad idea.
    */
   public function importPdf($pathToFile): ?NodeInterface {
     $import = $this->extract($pathToFile);
@@ -40,12 +40,18 @@ class Importer {
     return $this->save($import);
   }
 
+  /**
+   * Run the extract part of the process.
+   */
   public function extract($pathToFile): Import {
     return $this->extractOperation()
       ->setSource($pathToFile)
       ->getImport();
   }
 
+  /**
+   * Run a single step of the transform part of the process.
+   */
   public function transform($import, $pluginID, $page): void {
 
     foreach ($this->transformOperations() as $transformOperation) {
@@ -55,6 +61,9 @@ class Importer {
     }
   }
 
+  /**
+   * Run the save part of the process.
+   */
   public function save($import): EntityInterface {
     return $this->saveOperation()->import($import);
   }
@@ -75,6 +84,9 @@ class Importer {
     return $operation;
   }
 
+  /**
+   * Gets the IDs of the transform operations to use.
+   */
   public function getTransformPluginIds() {
     $ids = [];
     $operations = $this->transformOperations();

@@ -10,6 +10,9 @@ use Symfony\Component\HttpFoundation\RedirectResponse;
  */
 class Batch {
 
+  /**
+   * Get the importer service.
+   */
   protected static function importer(): Importer {
     return \Drupal::service('localgov_publications_importer.importer');
   }
@@ -37,8 +40,8 @@ class Batch {
     $import = $context['results']['import'];
 
     // Do this one step at a time by limiting the loop using the sandbox.
-    // @todo: We could ask the plugin at this point if it wants to work page by
-    // page? Then if not we could just do one call.
+    // @todo Ask the plugin at this point if it wants to work page by page.
+    // Then if not we could just do one call.
     foreach ($pluginIds as $pluginId) {
       foreach ($import->getPages() as $pageNumber => $page) {
         if (isset($context['sandbox']['done'][$pluginId][$pageNumber])) {
@@ -72,7 +75,7 @@ class Batch {
       return new RedirectResponse($results['redirect']);
     }
     else {
-      // @todo: What should we do for failure?
+      // @todo: Handle failure.
     }
   }
 

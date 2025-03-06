@@ -19,10 +19,16 @@ abstract class TransformPluginBase extends PluginBase implements TransformInterf
   /**
    * {@inheritDoc}
    */
-  public function transform(ImportInterface $import): void {
+  public function transform(ImportInterface $import, ?int $page = NULL): void {
 
-    foreach ($import->getPages() as $page) {
-      $this->transformPage($page);
+    foreach ($import->getPages() as $currentPageNumber => $currentPage) {
+
+      // $page is a limit. If it's not null, only process that page.
+      if ($page !== NULL && $page !== $currentPageNumber) {
+        continue;
+      }
+
+      $this->transformPage($currentPage);
     }
   }
 

@@ -2,12 +2,15 @@
 
 namespace Drupal\localgov_publications_importer\Service;
 
+use Drupal\Core\Entity\EntityInterface;
 use Drupal\localgov_publications_importer\ExtractOperationManager;
+use Drupal\localgov_publications_importer\Import;
 use Drupal\localgov_publications_importer\Plugin\ExtractInterface;
 use Drupal\localgov_publications_importer\Plugin\SaveInterface;
 use Drupal\localgov_publications_importer\Plugin\TransformInterface;
 use Drupal\localgov_publications_importer\SaveOperationManager;
 use Drupal\localgov_publications_importer\TransformOperationManager;
+use Drupal\migrate\Plugin\migrate\destination\Entity;
 use Drupal\node\NodeInterface;
 
 /**
@@ -27,17 +30,32 @@ class Importer {
 
   /**
    * Imports the given file as a new LocalGov Publication page.
+   * @deprecated As we don't really want to run batches all in one go.
    */
   public function importPdf($pathToFile): ?NodeInterface {
-
-    $import = $this->extractOperation()
-      ->setSource($pathToFile)
-      ->getImport();
-
+    $import = $this->extract($pathToFile);
     foreach ($this->transformOperations() as $transformOperation) {
       $transformOperation->transform($import);
     }
+    return $this->save($import);
+  }
 
+  public function extract($pathToFile): Import {
+    return $this->extractOperation()
+      ->setSource($pathToFile)
+      ->getImport();
+  }
+
+  public function transform($import, $pluginID, $page): void {
+
+    foreach ($this->transformOperations() as $transformOperation) {
+      if ($transformOperation->getPluginId() === $pluginID) {
+        $transformOperation->transform($import, $page);
+      }
+    }
+  }
+
+  public function save($import): EntityInterface {
     return $this->saveOperation()->import($import);
   }
 
@@ -55,6 +73,15 @@ class Importer {
     $operation = $this->extractOperationManager->createInstance($operationDefinition['id']);
 
     return $operation;
+  }
+
+  public function getTransformPluginIds() {
+    $ids = [];
+    $operations = $this->transformOperations();
+    foreach ($operations as $operation) {
+      $ids[] = $operation->getPluginId();
+    }
+    return $ids;
   }
 
   /**

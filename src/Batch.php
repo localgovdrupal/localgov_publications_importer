@@ -3,6 +3,7 @@
 namespace Drupal\localgov_publications_importer;
 
 use Drupal\localgov_publications_importer\Service\Importer;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 
 /**
  * Batch operations for importing content.
@@ -58,13 +59,21 @@ class Batch {
   public static function save(array &$context) {
     // We might not be importing to nodes, eventually... Generalise this.
     $node = self::importer()->save($context['results']['import']);
-    $context['sandbox']['redirect'] = $node->id();
+    $context['results']['redirect'] = '/node/' . $node->id();
   }
 
   /**
    * Batch is finished.
    */
-  public static function finished(array &$context) {
-    // Do a redirect here to $context['sandbox']['redirect']...
+  public static function finished(bool $success, array $results, array $operations, string $elapsed) {
+
+    if ($success) {
+      \Drupal::messenger()->addMessage("Import complete. Here is your publication.");
+      return new RedirectResponse($results['redirect']);
+    }
+    else {
+      // @todo: What should we do for failure?
+    }
   }
+
 }

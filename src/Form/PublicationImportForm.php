@@ -77,16 +77,17 @@ class PublicationImportForm extends FormBase {
   public function submitForm(array &$form, FormStateInterface $form_state): void {
 
     [$fid] = $form_state->getValue('my_file');
+    /** @var \Drupal\file\FileInterface $file */
     $file = $this->entityTypeManager->getStorage('file')->load($fid);
 
     $batch = new BatchBuilder();
-    $batch->setTitle('Running batch process.')
+    $batch->setTitle('Importing ' . $file->getFilename())
       ->setFinishCallback([Batch::class, 'finished'])
       ->setInitMessage('Commencing')
-      ->setProgressMessage('Processing...')
-      ->setErrorMessage('An error occurred during processing.');
+      ->setProgressMessage('Importing. Elapsed time: @elapsed.')
+      ->setErrorMessage('An error occurred during import.');
 
-    $batch->addOperation([Batch::class, 'extract'], [$file->uri->value]);
+    $batch->addOperation([Batch::class, 'extract'], [$file->getFileUri()]);
     $batch->addOperation([Batch::class, 'transform']);
     $batch->addOperation([Batch::class, 'save']);
 

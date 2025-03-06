@@ -75,7 +75,7 @@ class Batch {
       return new RedirectResponse($results['redirect']);
     }
     else {
-      // @todo: Handle failure.
+      // @todo Handle failure.
     }
   }
 

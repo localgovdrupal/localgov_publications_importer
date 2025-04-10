@@ -2,7 +2,9 @@
 
 namespace Drupal\localgov_publications_importer\Service;
 
+use Drupal\Core\Entity\EntityInterface;
 use Drupal\localgov_publications_importer\ExtractOperationManager;
+use Drupal\localgov_publications_importer\Import;
 use Drupal\localgov_publications_importer\Plugin\ExtractInterface;
 use Drupal\localgov_publications_importer\Plugin\SaveInterface;
 use Drupal\localgov_publications_importer\Plugin\TransformInterface;
@@ -27,17 +29,42 @@ class Importer {
 
   /**
    * Imports the given file as a new LocalGov Publication page.
+   *
+   * Call this to import a PDF in one go, which is probably a bad idea.
    */
   public function importPdf($pathToFile): ?NodeInterface {
-
-    $import = $this->extractOperation()
-      ->setSource($pathToFile)
-      ->getImport();
-
+    $import = $this->extract($pathToFile);
     foreach ($this->transformOperations() as $transformOperation) {
       $transformOperation->transform($import);
     }
+    return $this->save($import);
+  }
 
+  /**
+   * Run the extract part of the process.
+   */
+  public function extract($pathToFile): Import {
+    return $this->extractOperation()
+      ->setSource($pathToFile)
+      ->getImport();
+  }
+
+  /**
+   * Run a single step of the transform part of the process.
+   */
+  public function transform($import, $pluginID, $page): void {
+
+    foreach ($this->transformOperations() as $transformOperation) {
+      if ($transformOperation->getPluginId() === $pluginID) {
+        $transformOperation->transform($import, $page);
+      }
+    }
+  }
+
+  /**
+   * Run the save part of the process.
+   */
+  public function save($import): EntityInterface {
     return $this->saveOperation()->import($import);
   }
 
@@ -55,6 +82,18 @@ class Importer {
     $operation = $this->extractOperationManager->createInstance($operationDefinition['id']);
 
     return $operation;
+  }
+
+  /**
+   * Gets the IDs of the transform operations to use.
+   */
+  public function getTransformPluginIds(): array {
+    $ids = [];
+    $operations = $this->transformOperations();
+    foreach ($operations as $operation) {
+      $ids[] = $operation->getPluginId();
+    }
+    return $ids;
   }
 
   /**

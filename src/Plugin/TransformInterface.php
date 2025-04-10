@@ -3,18 +3,19 @@
 namespace Drupal\localgov_publications_importer\Plugin;
 
 use Drupal\localgov_publications_importer\ImportInterface;
+use Drupal\Component\Plugin\PluginInspectionInterface;
 
 /**
  * Interface for Transform Operation plugins.
  *
  * Accepts an import object and transforms it.
  */
-interface TransformInterface {
+interface TransformInterface extends PluginInspectionInterface {
 
   /**
    * Transform the content.
    */
-  public function transform(ImportInterface $import): void;
+  public function transform(ImportInterface $import, ?int $page = NULL): void;
 
   /**
    * The order this plugin should run in.

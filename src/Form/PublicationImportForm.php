@@ -2,9 +2,11 @@
 
 namespace Drupal\localgov_publications_importer\Form;
 
+use Drupal\Core\Batch\BatchBuilder;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\localgov_publications_importer\Batch;
 use Drupal\localgov_publications_importer\Service\Importer as PublicationImporter;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -75,13 +77,21 @@ class PublicationImportForm extends FormBase {
   public function submitForm(array &$form, FormStateInterface $form_state): void {
 
     [$fid] = $form_state->getValue('my_file');
+    /** @var \Drupal\file\FileInterface $file */
     $file = $this->entityTypeManager->getStorage('file')->load($fid);
-    $node = $this->publicationImporter->importPdf($file->uri->value);
 
-    if ($node) {
-      // Redirect to the node we created.
-      $form_state->setRedirect('entity.node.canonical', ['node' => $node->id()]);
-    }
+    $batch = new BatchBuilder();
+    $batch->setTitle('Importing ' . $file->getFilename())
+      ->setFinishCallback([Batch::class, 'finished'])
+      ->setInitMessage('Commencing')
+      ->setProgressMessage('Importing. Elapsed time: @elapsed.')
+      ->setErrorMessage('An error occurred during import.');
+
+    $batch->addOperation([Batch::class, 'extract'], [$file->getFileUri()]);
+    $batch->addOperation([Batch::class, 'transform']);
+    $batch->addOperation([Batch::class, 'save']);
+
+    batch_set($batch->toArray());
   }
 
 }

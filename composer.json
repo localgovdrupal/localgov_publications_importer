@@ -16,6 +16,6 @@
         "smalot/pdfparser": "^2.7.0"
     },
     "suggest": {
-        "drupal/ai": "Format the imported PDF using an AI LLM"
+        "drupal/ai": "Format the imported PDF using an AI LLM (required by the submodule localgov_publications_importer_ai)"
     }
 }

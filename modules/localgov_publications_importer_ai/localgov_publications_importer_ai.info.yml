@@ -1,0 +1,8 @@
+name: 'Localgov publications importer AI'
+type: module
+description: 'Provides an AI LLM transform plugin for the Localgov publications importer.'
+package: LocalGov Drupal
+core_version_requirement: ^10 || ^11
+dependencies:
+  - ai:ai
+  - localgov_publications_importer:localgov_publications_importer

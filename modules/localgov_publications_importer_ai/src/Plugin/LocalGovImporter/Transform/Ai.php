@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\localgov_publications_importer\Plugin\LocalGovImporter\Transform;
+namespace Drupal\localgov_publications_importer_ai\Plugin\LocalGovImporter\Transform;
 
 use Drupal\ai\AiProviderPluginManager;
 use Drupal\ai\OperationType\Chat\ChatInput;
@@ -11,6 +11,7 @@ use Drupal\localgov_publications_importer\Attribute\Transform;
 use Drupal\localgov_publications_importer\PageInterface;
 use Masterminds\HTML5;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Drupal\localgov_publications_importer\Plugin\LocalGovImporter\Transform\TransformPluginBase;
 
 /**
  * Transform operation that uses AI to clean up content.
@@ -30,7 +31,7 @@ class Ai extends TransformPluginBase implements ContainerFactoryPluginInterface 
       $configuration,
       $plugin_id,
       $plugin_definition,
-      $container->get('ai.provider')
+      $container->get('ai.provider'),
     );
   }
 
@@ -44,6 +45,8 @@ class Ai extends TransformPluginBase implements ContainerFactoryPluginInterface 
     protected AiProviderPluginManager $aiProvider,
   ) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
+    dpm('hello');
+    dpm($this->aiProvider);
   }
 
   /**
@@ -59,6 +62,7 @@ class Ai extends TransformPluginBase implements ContainerFactoryPluginInterface 
   public function transformPage(PageInterface $page): void {
 
     $sets = $this->aiProvider->getDefaultProviderForOperationType('chat');
+    dpm($sets);
 
     // If there's no AI provider returned, don't try to use one.
     // @todo Consider better ways to handle this.

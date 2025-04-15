@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\localgov_publications_importer\Plugin\LocalGovImporter\Transform;
+namespace Drupal\localgov_publications_importer_ai\Plugin\LocalGovImporter\Transform;
 
 use Drupal\ai\AiProviderPluginManager;
 use Drupal\ai\OperationType\Chat\ChatInput;
@@ -9,6 +9,7 @@ use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\localgov_publications_importer\Attribute\Transform;
 use Drupal\localgov_publications_importer\PageInterface;
+use Drupal\localgov_publications_importer\Plugin\LocalGovImporter\Transform\TransformPluginBase;
 use Masterminds\HTML5;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -30,7 +31,7 @@ class Ai extends TransformPluginBase implements ContainerFactoryPluginInterface 
       $configuration,
       $plugin_id,
       $plugin_definition,
-      $container->get('ai.provider')
+      $container->get('ai.provider'),
     );
   }
 

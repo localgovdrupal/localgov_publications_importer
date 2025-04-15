@@ -16,17 +16,20 @@ You can fund the development of this feature via the [LocalGov Drupal Community 
 3) Upload a PDF file to the form and submit it.
 4) After a few seconds, you'll get redirected to a new HTML Publication created from the supplied PDF.
 
-If you'd like to use AI to clean up the text, you can. The default AI chat
-provider will be used if one is configured. To configure one using ChatGPT,
-you'll need to get an API key from OpenAI, then:
+## Using AI to format the imported PDF
 
-1) Choose "Configuration" -> "AI" -> "Provider Settings" -> "OpenAI Authentication" from the admin menu.
-2) Click the link saying "create a new key".
-3) Add your API key here. Key name and description can be whatever makes sense to you. Key type should be "Authentication". Key provider can be "Configuration" if you're just testing locally. Value is the key itself.
-4) Save the key and head to "Configuration" -> "AI" -> "Provider Settings" -> "OpenAI Authentication" again.
-5) This time you can choose your key from the dropdown. The key will be verified on save, so if you put in a key that's incorrect, you'll be notified here.
-6) Once the key is saved, head to "Configuration" -> "AI" -> "AI Default Settings".
-7) Scroll down to chat. Ensure OpenAI is selected. Choose the model you'd like to use. GPT-4o seems to work.
+If you'd like to use AI to clean up the text, you can. A submodule, localgov_publications_importer_ai, is included. To enable this module you will need to install the [Drupal AI module](https://www.drupal.org/project/ai) and at least one [AI provider module](https://www.drupal.org/project/ai#:~:text=complete%20AI%20applications.-,AI%20Providers,-In%20order%20to). The default AI chat provider will be used if one is configured. In the steps below will illustrate how to configure one using ChatGPT. Similar steps can be used with other AI LLM providers:
+
+1) Enable the localgov_publications_importer_ai submodule.
+2) Download and install the [Open AI provider](https://www.drupal.org/project/ai_provider_openai) module.
+3) Get an [API key from OpenAI](https://platform.openai.com/api-keys) (requires an Open AI account).
+4) Choose "Configuration" -> "AI" -> "Provider Settings" -> "OpenAI Authentication" from the admin menu.
+5) Click the link saying "create a new key".
+6) Add your API key here. Key name and description can be whatever makes sense to you. Key type should be "Authentication". Key provider can be "Configuration" if you're just testing locally. Value is the key itself.
+7) Save the key and head to "Configuration" -> "AI" -> "Provider Settings" -> "OpenAI Authentication" again.
+8) This time you can choose your key from the dropdown. The key will be verified on save, so if you put in a key that's incorrect, you'll be notified here.
+9) Once the key is saved, head to "Configuration" -> "AI" -> "AI Default Settings".
+10) Scroll down to chat. Ensure OpenAI is selected. Choose the model you'd like to use. GPT-4o seems to work.
 
 Now repeat the steps to upload a PDF from before. You'll notice that the form submission takes longer, and the results are cleaned up compared to what they were previously like.
 

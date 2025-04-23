@@ -12,11 +12,13 @@ use Drupal\Core\Config\Entity\ConfigEntityBase;
  *   label = @Translation("Import Pipeline"),
  *   handlers = {
  *     "form" = {
- *       "add" = "Drupal\\localgov_publications_importer\\Form\\ImportPipelineForm",
- *       "edit" = "Drupal\\localgov_publications_importer\\Form\\ImportPipelineForm",
- *       "delete" = "Drupal\\Core\\Entity\\Form\\ConfigEntityDeleteForm"
+ *       "default" = "Drupal\localgov_publications_importer\Form\ImportPipelineForm",
+ *       "delete" = "Drupal\Core\Entity\Form\ConfigEntityDeleteForm"
  *     },
- *     "list_builder" = "Drupal\\Core\\Config\\Entity\\ConfigEntityListBuilder"
+ *     "list_builder" = "Drupal\Core\Config\Entity\ConfigEntityListBuilder",
+ *     "route_provider" = {
+ *       "html" = "Drupal\Core\Entity\Routing\AdminHtmlRouteProvider",
+ *     },
  *   },
  *   config_prefix = "import_pipeline",
  *   admin_permission = "administer site configuration",
@@ -25,6 +27,8 @@ use Drupal\Core\Config\Entity\ConfigEntityBase;
  *     "label" = "label"
  *   },
  *   links = {
+ *     "add-form" = "/admin/config/system/import-pipeline/add",
+ *     "collection" = "/admin/config/system/import-pipeline",
  *     "edit-form" = "/admin/config/system/import-pipeline/{import_pipeline}",
  *     "delete-form" = "/admin/config/system/import-pipeline/{import_pipeline}/delete"
  *   }

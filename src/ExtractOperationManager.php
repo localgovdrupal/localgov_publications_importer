@@ -10,6 +10,8 @@ use Drupal\localgov_publications_importer\Plugin\ExtractInterface;
 
 /**
  * Manages discovery and instantiation of Extract operations.
+ *
+ * @method ExtractInterface createInstance(string $plugin_id, array $configuration = []);
  */
 class ExtractOperationManager extends DefaultPluginManager {
 

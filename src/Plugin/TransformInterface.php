@@ -24,4 +24,22 @@ interface TransformInterface extends PluginInspectionInterface {
    */
   public function order(): int;
 
+  /**
+   * Is this plugin configurable?
+   *
+   * If it's not, we won't show fields to configure it in the pipeline form.
+   *
+   * @return bool
+   *   True if configurable. False otherwise.
+   */
+  public function isConfigurable(): bool;
+
+  /**
+   * Get the configuration form fields for this plugin.
+   *
+   * @return array
+   *   Form API fields.
+   */
+  public function getConfigurationForm(): array;
+
 }

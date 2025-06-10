@@ -26,6 +26,16 @@ use Drupal\Core\Config\Entity\ConfigEntityBase;
  *     "id" = "id",
  *     "label" = "label"
  *   },
+ *   config_export = {
+ *     "id",
+ *     "label",
+ *     "extract_plugin",
+ *     "extract_plugin_configuration",
+ *     "transform_plugins",
+ *     "transform_plugin_configurations",
+ *     "save_plugin",
+ *     "save_plugin_configuration"
+ *   },
  *   links = {
  *     "add-form" = "/admin/config/system/import-pipeline/add",
  *     "collection" = "/admin/config/system/import-pipeline",

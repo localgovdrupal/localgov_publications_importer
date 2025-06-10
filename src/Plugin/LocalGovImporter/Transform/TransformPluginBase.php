@@ -58,4 +58,18 @@ abstract class TransformPluginBase extends PluginBase implements TransformInterf
     return $content;
   }
 
+  /**
+   * {@inheritDoc}
+   */
+  public function isConfigurable(): bool {
+    return FALSE;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  public function getConfigurationForm(): array {
+    return [];
+  }
+
 }

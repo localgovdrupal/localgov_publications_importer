@@ -53,31 +53,31 @@ class ImportPipelineForm extends EntityForm {
       '#title' => $this->t('Extract Plugin'),
       '#options' => $this->getExtractPluginOptions(),
       '#default_value' => $entity->extract_plugin,
+      '#ajax' => [
+        'callback' => '::showExtractPluginConfiguration',
+        'wrapper' => 'extract-plugin-configuration',
+      ],
     ];
 
+    $showExtractPluginConfiguration = FALSE;
+    $currentExtractPluginId = $form_state->getValue('extract_plugin');
+    if ($currentExtractPluginId) {
+      $extractPlugin = $this->extractOperationManager->createInstance($currentExtractPluginId);
+      $showExtractPluginConfiguration = $extractPlugin->isConfigurable();
+    }
+
     $form['extract_plugin_configuration'] = [
-      '#type' => 'textarea',
+      '#type' => $showExtractPluginConfiguration ? 'textarea' : 'hidden',
       '#title' => $this->t('Extract Plugin Configuration'),
       '#default_value' => json_encode($entity->extract_plugin_configuration),
       '#description' => $this->t('Provide configuration as a JSON array.'),
-    ];
-
-    $form['transform'] = [
-      '#prefix' => '<div id="tranform-wrapper">',
+      '#prefix' => '<div id="extract-plugin-configuration">',
       '#suffix' => '</div>',
     ];
 
-    $form['transform']['transform_plugins'] = [
-      '#type' => 'table',
-      '#title' => $this->t('Transform Plugins'),
-      '#header' => [$this->t('Plugin ID'), $this->t('Configuration'), $this->t('Operations')],
-      '#tabledrag' => [
-        [
-          'action' => 'order',
-          'relationship' => 'sibling',
-          'group' => 'transform-weight',
-        ],
-      ],
+    $form['transform'] = [
+      '#prefix' => '<div id="transform-wrapper">',
+      '#suffix' => '</div>',
     ];
 
     $transformPluginOptions = $this->getTransformPluginOptions();
@@ -91,17 +91,55 @@ class ImportPipelineForm extends EntityForm {
       $entity->transform_plugins[] = $addTransformPlugin;
     }
 
-    foreach ($entity->transform_plugins as $index => $plugin_id) {
+    $form['transform']['selected_transform_plugin'] = [
+      '#type' => 'checkboxes',
+      '#title' => $this->t('Choose transform plugins'),
+      '#options' => $transformPluginOptions,
+      '#ajax' => [
+        'callback' => '::addTransform',
+        'wrapper' => 'transform-wrapper',
+      ],
+    ];
+
+    $selectedTransformPlugins = array_filter($form_state->getValue('selected_transform_plugin', []));
+
+    if (count($selectedTransformPlugins) > 0) {
+      $form['transform']['transform_plugins'] = [
+        '#type' => 'table',
+        '#title' => $this->t('Transform Plugins'),
+        '#header' => [
+          $this->t('Plugin ID'),
+          $this->t('Configuration'),
+          $this->t('Operations')
+        ],
+        '#tabledrag' => [
+          [
+            'action' => 'order',
+            'relationship' => 'sibling',
+            'group' => 'transform-weight',
+          ],
+        ],
+      ];
+    }
+
+    foreach ($selectedTransformPlugins as $index => $plugin_id) {
+
+      $transformPlugin = $this->transformOperationManager->createInstance($plugin_id);
+
       $form['transform']['transform_plugins'][$index]['#attributes']['class'][] = 'draggable';
       $form['transform']['transform_plugins'][$index]['plugin'] = [
         '#prefix' => $transformPluginOptions[$plugin_id],
         '#type' => 'hidden',
         '#default_value' => $plugin_id,
       ];
-      $form['transform']['transform_plugins'][$index]['configuration'] = [
-        '#type' => 'textarea',
-        '#default_value' => json_encode($entity->transform_plugin_configurations[$index] ?? []),
-      ];
+      if ($transformPlugin->isConfigurable()) {
+        $form['transform']['transform_plugins'][$index]['configuration'] = $transformPlugin->getConfigurationForm();
+      }
+      else {
+        $form['transform']['transform_plugins'][$index]['configuration'] = [
+          '#markup' => 'Not configurable',
+        ];
+      }
       $form['transform']['transform_plugins'][$index]['weight'] = [
         '#type' => 'weight',
         '#title_display' => 'invisible',
@@ -110,32 +148,6 @@ class ImportPipelineForm extends EntityForm {
       ];
     }
 
-    // Remove any plugins that are already in use.
-    foreach ($entity->transform_plugins as $plugin_id) {
-      unset($transformPluginOptions[$plugin_id]);
-    }
-
-    if (count($transformPluginOptions) === 0) {
-      $disableAddTransform = TRUE;
-      $description = 'There are no more transform plugins available.';
-    }
-    else {
-      $disableAddTransform = FALSE;
-      $description = 'Please choose a transform plugin to add.';
-    }
-
-    $form['transform']['add_transform_plugin'] = [
-      '#type' => 'select',
-      '#title' => $this->t('Add Transform Plugin'),
-      '#options' => ['-- Choose --'] + $transformPluginOptions,
-      '#ajax' => [
-        'callback' => '::addTransform',
-        'wrapper' => 'tranform-wrapper',
-      ],
-      '#disabled' => $disableAddTransform,
-      '#description' => $description,
-    ];
-
     $form['save_plugin'] = [
       '#type' => 'select',
       '#title' => $this->t('Save Plugin'),
@@ -143,18 +155,44 @@ class ImportPipelineForm extends EntityForm {
       '#default_value' => $entity->save_plugin,
     ];
 
+    $showSavePluginConfiguration = FALSE;
+    $currentSavePluginId = $form_state->getValue('save_plugin');
+    if ($currentSavePluginId) {
+      $savePlugin = $this->saveOperationManager->createInstance($currentSavePluginId);
+      $showSavePluginConfiguration = $savePlugin->isConfigurable();
+    }
+
     $form['save_plugin_configuration'] = [
-      '#type' => 'textarea',
+      '#type' => $showSavePluginConfiguration ? 'textarea' : 'hidden',
       '#title' => $this->t('Save Plugin Configuration'),
       '#default_value' => json_encode($entity->save_plugin_configuration),
       '#description' => $this->t('Provide configuration as a JSON array.'),
+      '#prefix' => '<div id="save-plugin-configuration">',
+      '#suffix' => '</div>',
     ];
 
     return parent::form($form, $form_state);
   }
 
+  /**
+   * AJAX callback for the extract plugin configuration.
+   */
+  public function showExtractPluginConfiguration(array &$form, FormStateInterface $form_state) {
+    return $form['extract_plugin_configuration'];
+  }
+
+  /**
+   * AJAX callback for the transform plugins.
+   */
   public function addTransform(array &$form, FormStateInterface $form_state) {
     return $form['transform'];
+  }
+
+  /**
+   * AJAX callback for the save plugin configuration.
+   */
+  public function showSavePluginConfiguration(array &$form, FormStateInterface $form_state) {
+    return $form['save_plugin_configuration'];
   }
 
   public function save(array $form, FormStateInterface $form_state) {

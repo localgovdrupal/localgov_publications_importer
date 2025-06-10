@@ -102,4 +102,22 @@ class Ai extends TransformPluginBase implements ContainerFactoryPluginInterface 
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
+  public function isConfigurable(): bool {
+    return TRUE;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  public function getConfigurationForm(): array {
+    return [
+      'prompt' => [
+        '#type' => 'textarea',
+        '#description' => "The prompt that will be sent to the AI to describe what you'd like to do with the extracted content",
+      ],
+    ];
+  }
 }

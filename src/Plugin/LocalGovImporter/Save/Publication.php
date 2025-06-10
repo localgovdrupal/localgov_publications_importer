@@ -21,31 +21,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
   label: new TranslatableMarkup('Publication'),
   description: new TranslatableMarkup('Save operation that creates an HTML publication.')
 )]
-class Publication extends PluginBase implements SaveInterface, ContainerFactoryPluginInterface {
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    return new static(
-      $configuration,
-      $plugin_id,
-      $plugin_definition,
-      $container->get('entity_type.manager')
-    );
-  }
-
-  /**
-   * Creates a Publication Save Operation.
-   */
-  public function __construct(
-    array $configuration,
-    $plugin_id,
-    $plugin_definition,
-    protected EntityTypeManagerInterface $entityTypeManager,
-  ) {
-    parent::__construct($configuration, $plugin_id, $plugin_definition);
-  }
+class Publication extends SavePluginBase {
 
   /**
    * {@inheritDoc}

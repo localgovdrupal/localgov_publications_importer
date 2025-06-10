@@ -46,27 +46,60 @@ use Drupal\Core\Config\Entity\ConfigEntityBase;
  */
 class ImportPipeline extends ConfigEntityBase {
 
-  /** @var string */
+  /**
+   * The pipeline ID.
+   *
+   * @var string
+   */
   public $id;
 
-  /** @var string */
+  /**
+   * The pipeline label.
+   *
+   * @var string
+   */
   public $label;
 
-  /** @var string */
+  /**
+   * The extract plugin ID.
+   *
+   * @var string
+   */
   public $extract_plugin;
 
-  /** @var array */
+  /**
+   * The extract plugin configuration.
+   *
+   * @var array
+   */
   public $extract_plugin_configuration = [];
 
-  /** @var array */
+  /**
+   * The transform plugin IDs.
+   *
+   * @var array
+   */
   public $transform_plugins = [];
 
-  /** @var array */
+  /**
+   * The transform plugin configurations.
+   *
+   * @var array
+   */
   public $transform_plugin_configurations = [];
 
-  /** @var string */
+  /**
+   * The save plugin ID.
+   *
+   * @var string
+   */
   public $save_plugin;
 
-  /** @var array */
+  /**
+   * The save plugin configuration.
+   *
+   * @var array
+   */
   public $save_plugin_configuration = [];
+
 }

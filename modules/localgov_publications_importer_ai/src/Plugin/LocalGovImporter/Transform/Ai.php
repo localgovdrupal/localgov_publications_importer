@@ -23,6 +23,8 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 )]
 class Ai extends TransformPluginBase implements ContainerFactoryPluginInterface {
 
+  protected string $prompt = 'This plain text document has been stripped of its formatting. Add the formatting back in, and give me the whole document back as valid HTML.';
+
   /**
    * {@inheritdoc}
    */
@@ -45,6 +47,10 @@ class Ai extends TransformPluginBase implements ContainerFactoryPluginInterface 
     protected AiProviderPluginManager $aiProvider,
   ) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
+
+    if (isset($configuration['prompt'])) {
+      $this->prompt = $configuration['prompt'];
+    }
   }
 
   /**
@@ -70,7 +76,7 @@ class Ai extends TransformPluginBase implements ContainerFactoryPluginInterface 
 
     $provider = $this->aiProvider->createInstance($sets['provider_id']);
     $messages = new ChatInput([
-      new chatMessage('system', 'This plain text document has been stripped of its formatting. Please add the formatting back in, and give me the whole document back as valid HTML.'),
+      new chatMessage('system', $this->prompt),
       new chatMessage('user', $page->getContent()),
     ]);
     $message = $provider->chat($messages, $sets['model_id'])->getNormalized();
@@ -117,6 +123,7 @@ class Ai extends TransformPluginBase implements ContainerFactoryPluginInterface 
       'prompt' => [
         '#type' => 'textarea',
         '#description' => "The prompt that will be sent to the AI to describe what you'd like to do with the extracted content",
+        '#default_value' => $this->prompt,
       ],
     ];
   }

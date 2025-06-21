@@ -8,6 +8,7 @@ use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\localgov_publications_importer\Attribute\Save;
 use Drupal\localgov_publications_importer\ImportInterface;
+use Drupal\localgov_publications_importer\Plugin\SaveInterface;
 use Drupal\node\NodeInterface;
 use Drupal\paragraphs\Entity\Paragraph;
 use Symfony\Component\DependencyInjection\ContainerInterface;

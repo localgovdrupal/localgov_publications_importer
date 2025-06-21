@@ -68,5 +68,4 @@ class SmalotPdfParserExtract extends ExtractPluginBase {
 
     return $import;
   }
-
 }

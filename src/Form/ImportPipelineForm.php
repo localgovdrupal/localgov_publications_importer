@@ -81,27 +81,27 @@ class ImportPipelineForm extends EntityForm {
     ];
 
     $transformPluginOptions = $this->getTransformPluginOptions();
+    $selectedTransformPluginsFromForm = $form_state->getValue('selected_transform_plugin', NULL);
 
-    $addTransformPlugin = $form_state->getValue('add_transform_plugin');
-    if ($addTransformPlugin !== NULL && $addTransformPlugin !== '0') {
-      // This is an empty string sometimes for some reason...
-      if (!is_array($entity->transform_plugins)) {
-        $entity->transform_plugins = [];
-      }
-      $entity->transform_plugins[] = $addTransformPlugin;
+    if ($selectedTransformPluginsFromForm === NULL) {
+      // Nothing chosen in the form yet - use the entity values.
+      $selectedTransformPlugins = array_filter($entity->transform_plugins);
+    }
+    else {
+      // Existing values have been changed. Use the changed values.
+      $selectedTransformPlugins = array_filter($selectedTransformPluginsFromForm);
     }
 
     $form['transform']['selected_transform_plugin'] = [
       '#type' => 'checkboxes',
       '#title' => $this->t('Choose transform plugins'),
       '#options' => $transformPluginOptions,
+      '#default_value' => $selectedTransformPlugins,
       '#ajax' => [
         'callback' => '::addTransform',
         'wrapper' => 'transform-wrapper',
       ],
     ];
-
-    $selectedTransformPlugins = array_filter($form_state->getValue('selected_transform_plugin', []));
 
     if (count($selectedTransformPlugins) > 0) {
       $form['transform']['transform_plugins'] = [
@@ -122,15 +122,17 @@ class ImportPipelineForm extends EntityForm {
       ];
     }
 
-    foreach ($selectedTransformPlugins as $index => $plugin_id) {
+    foreach ($selectedTransformPlugins as $index => $pluginId) {
 
-      $transformPlugin = $this->transformOperationManager->createInstance($plugin_id);
+      $pluginConfiguration = $entity->transform_plugin_configurations[$index] ?? [];
+
+      $transformPlugin = $this->transformOperationManager->createInstance($pluginId, $pluginConfiguration);
 
       $form['transform']['transform_plugins'][$index]['#attributes']['class'][] = 'draggable';
       $form['transform']['transform_plugins'][$index]['plugin'] = [
-        '#prefix' => $transformPluginOptions[$plugin_id],
+        '#prefix' => $transformPluginOptions[$pluginId],
         '#type' => 'hidden',
-        '#default_value' => $plugin_id,
+        '#default_value' => $pluginId,
       ];
       if ($transformPlugin->isConfigurable()) {
         $form['transform']['transform_plugins'][$index]['configuration'] = $transformPlugin->getConfigurationForm();
@@ -196,9 +198,27 @@ class ImportPipelineForm extends EntityForm {
   }
 
   public function save(array $form, FormStateInterface $form_state) {
+
+    /** @var \Drupal\localgov_publications_importer\Entity\ImportPipeline $entity */
     $entity = $this->entity;
-    $entity->extract_plugin_configuration = $form_state->getValue('extract_plugin_configuration');
-    $entity->save_plugin_configuration = $form_state->getValue('save_plugin_configuration');
+
+    $entity->extract_plugin = $form_state->getValue('extract_plugin');
+    $extractPlugin = $this->extractOperationManager->createInstance($entity->extract_plugin);
+    if ($extractPlugin->isConfigurable()) {
+      $entity->extract_plugin_configuration = $form_state->getValue('extract_plugin_configuration');
+    }
+    else {
+      $entity->extract_plugin_configuration = [];
+    }
+
+    $entity->save_plugin = $form_state->getValue('save_plugin');
+    $savePlugin = $this->saveOperationManager->createInstance($entity->save_plugin);
+    if ($savePlugin->isConfigurable()) {
+      $entity->save_plugin_configuration = $form_state->getValue('save_plugin_configuration');
+    }
+    else {
+      $entity->save_plugin_configuration = [];
+    }
 
     $plugin_rows = $form_state->getValue('transform_plugins');
     $entity->transform_plugins = [];
@@ -208,7 +228,7 @@ class ImportPipelineForm extends EntityForm {
       // $row['weight'] is a thing too. We should use that to sort the plugins.
 
       $entity->transform_plugins[] = $row['plugin'];
-      $entity->transform_plugin_configurations[] = $row['configuration'];
+      $entity->transform_plugin_configurations[] = $row['configuration'] ?? [];
     }
 
     $entity->save();

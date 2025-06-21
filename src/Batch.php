@@ -13,23 +13,25 @@ class Batch {
   /**
    * Get the importer service.
    */
-  protected static function importer(): Importer {
-    return \Drupal::service('localgov_publications_importer.importer');
+  protected static function importer(string $importPipelineId): Importer {
+    $importer = \Drupal::service('localgov_publications_importer.importer');
+    $importer->setPipeline($importPipelineId);
+    return $importer;
   }
 
   /**
    * Runs the extract plugin.
    */
-  public static function extract(string $filename, array &$context): void {
-    $context['results']['import'] = self::importer()->extract($filename);
+  public static function extract(string $importPipelineId, string $filename, array &$context): void {
+    $context['results']['import'] = self::importer($importPipelineId)->extract($filename);
   }
 
   /**
    * Runs the transform plugins, one page at a time.
    */
-  public static function transform(array &$context): void {
+  public static function transform(string $importPipelineId, array &$context): void {
 
-    $importer = self::importer();
+    $importer = self::importer($importPipelineId);
 
     $pluginIds = $importer->getTransformPluginIds();
 
@@ -59,9 +61,9 @@ class Batch {
   /**
    * Runs the save plugin.
    */
-  public static function save(array &$context): void {
+  public static function save(string $importPipelineId, array &$context): void {
     // We might not be importing to nodes, eventually... Generalise this.
-    $node = self::importer()->save($context['results']['import']);
+    $node = self::importer($importPipelineId)->save($context['results']['import']);
     $context['results']['redirect'] = '/node/' . $node->id();
   }
 

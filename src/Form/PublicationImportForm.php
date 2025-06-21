@@ -6,6 +6,8 @@ use Drupal\Core\Batch\BatchBuilder;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Link;
+use Drupal\Core\Url;
 use Drupal\localgov_publications_importer\Batch;
 use Drupal\localgov_publications_importer\Service\Importer as PublicationImporter;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -61,6 +63,29 @@ class PublicationImportForm extends FormBase {
       '#upload_location' => 'public://my_files/',
     ];
 
+    $importPipelines = $this->entityTypeManager
+      ->getStorage('import_pipeline')
+      ->loadMultiple();
+
+    if (count($importPipelines) === 0) {
+      $link = Link::fromTextAndUrl($this->t('Import Pipeline admin page'), Url::fromRoute('entity.import_pipeline.collection'));
+      $this->messenger()->addError($this->t('There are no configured import pipelines. Please add one from the @link.', ['@link' => $link->toString()]));
+    }
+
+    $importPipelineOptions = [];
+    foreach ($importPipelines as $importPipeline) {
+      $importPipelineOptions[$importPipeline->id()] = $importPipeline->label();
+    }
+
+    $form['import_pipeline'] = [
+      '#type' => 'radios',
+      '#title' => $this->t('Import Pipeline'),
+      '#options' => $importPipelineOptions,
+      '#default_value' => array_key_first($importPipelineOptions),
+      '#required' => TRUE,
+      '#description' => $this->t('Select the import pipeline to use for processing the uploaded file.'),
+    ];
+
     $form['actions']['#type'] = 'actions';
     $form['actions']['submit'] = [
       '#type' => 'submit',
@@ -80,6 +105,8 @@ class PublicationImportForm extends FormBase {
     /** @var \Drupal\file\FileInterface $file */
     $file = $this->entityTypeManager->getStorage('file')->load($fid);
 
+    $importPipelineId = $form_state->getValue('import_pipeline');
+
     $batch = new BatchBuilder();
     $batch->setTitle('Importing ' . $file->getFilename())
       ->setFinishCallback([Batch::class, 'finished'])
@@ -87,9 +114,9 @@ class PublicationImportForm extends FormBase {
       ->setProgressMessage('Importing. Elapsed time: @elapsed.')
       ->setErrorMessage('An error occurred during import.');
 
-    $batch->addOperation([Batch::class, 'extract'], [$file->getFileUri()]);
-    $batch->addOperation([Batch::class, 'transform']);
-    $batch->addOperation([Batch::class, 'save']);
+    $batch->addOperation([Batch::class, 'extract'], [$importPipelineId, $file->getFileUri()]);
+    $batch->addOperation([Batch::class, 'transform'], [$importPipelineId]);
+    $batch->addOperation([Batch::class, 'save'], [$importPipelineId]);
 
     batch_set($batch->toArray());
   }

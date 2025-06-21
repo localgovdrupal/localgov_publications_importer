@@ -2,16 +2,13 @@
 
 namespace Drupal\localgov_publications_importer\Form;
 
-use Drupal\Core\Entity\EntityForm;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Entity\EntityForm;
 use Drupal\localgov_publications_importer\ExtractOperationManager;
-use Drupal\localgov_publications_importer\SaveOperationManager;
 use Drupal\localgov_publications_importer\TransformOperationManager;
+use Drupal\localgov_publications_importer\SaveOperationManager;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
-/**
- * Form for managing Import Pipeline configuration entities.
- */
 class ImportPipelineForm extends EntityForm {
 
   /**
@@ -32,9 +29,6 @@ class ImportPipelineForm extends EntityForm {
   ) {
   }
 
-  /**
-   * {@inheritdoc}
-   */
   public function form(array $form, FormStateInterface $form_state) {
     /** @var \Drupal\localgov_publications_importer\Entity\ImportPipeline $entity */
     $entity = $this->entity;
@@ -116,7 +110,7 @@ class ImportPipelineForm extends EntityForm {
         '#header' => [
           $this->t('Plugin ID'),
           $this->t('Configuration'),
-          $this->t('Operations'),
+          $this->t('Operations')
         ],
         '#tabledrag' => [
           [
@@ -201,50 +195,38 @@ class ImportPipelineForm extends EntityForm {
     return $form['save_plugin_configuration'];
   }
 
-  /**
-   * {@inheritdoc}
-   */
   public function save(array $form, FormStateInterface $form_state) {
     $entity = $this->entity;
-    $entity->extract_plugin_configuration = json_decode($form_state->getValue('extract_plugin_configuration'), TRUE);
-    $entity->save_plugin_configuration = json_decode($form_state->getValue('save_plugin_configuration'), TRUE);
+    $entity->extract_plugin_configuration = $form_state->getValue('extract_plugin_configuration');
+    $entity->save_plugin_configuration = $form_state->getValue('save_plugin_configuration');
 
     $plugin_rows = $form_state->getValue('transform_plugins');
     $entity->transform_plugins = [];
     $entity->transform_plugin_configurations = [];
     foreach ($plugin_rows as $row) {
+
+      // $row['weight'] is a thing too. We should use that to sort the plugins.
+
       $entity->transform_plugins[] = $row['plugin'];
-      $entity->transform_plugin_configurations[] = json_decode($row['configuration'], TRUE);
+      $entity->transform_plugin_configurations[] = $row['configuration'];
     }
 
     $entity->save();
     $form_state->setRedirect('entity.import_pipeline.collection');
   }
 
-  /**
-   * Gets available extract plugin options.
-   */
   protected function getExtractPluginOptions() {
     return $this->getPluginOptions($this->extractOperationManager->getDefinitions());
   }
 
-  /**
-   * Gets available transform plugin options.
-   */
   protected function getTransformPluginOptions() {
     return $this->getPluginOptions($this->transformOperationManager->getDefinitions());
   }
 
-  /**
-   * Gets available save plugin options.
-   */
   protected function getSavePluginOptions() {
     return $this->getPluginOptions($this->saveOperationManager->getDefinitions());
   }
 
-  /**
-   * Converts plugin definitions to options array.
-   */
   protected function getPluginOptions($pluginDefinitions) {
     $options = [];
     foreach ($pluginDefinitions as $id => $pluginDefinition) {
@@ -252,5 +234,4 @@ class ImportPipelineForm extends EntityForm {
     }
     return $options;
   }
-
 }

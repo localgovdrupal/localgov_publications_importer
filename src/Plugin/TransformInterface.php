@@ -2,8 +2,8 @@
 
 namespace Drupal\localgov_publications_importer\Plugin;
 
-use Drupal\Component\Plugin\PluginInspectionInterface;
 use Drupal\localgov_publications_importer\ImportInterface;
+use Drupal\Component\Plugin\PluginInspectionInterface;
 
 /**
  * Interface for Transform Operation plugins.

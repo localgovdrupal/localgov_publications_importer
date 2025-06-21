@@ -13,9 +13,9 @@ use Drupal\Core\Config\Entity\ConfigEntityBase;
  *   handlers = {
  *     "form" = {
  *       "default" = "Drupal\localgov_publications_importer\Form\ImportPipelineForm",
- *       "delete" = "Drupal\Core\Entity\Form\ConfigEntityDeleteForm"
+ *       "delete" = "Drupal\Core\Entity\EntityDeleteForm"
  *     },
- *     "list_builder" = "Drupal\Core\Config\Entity\ConfigEntityListBuilder",
+ *     "list_builder" = "Drupal\localgov_publications_importer\ImportPipelineListBuilder",
  *     "route_provider" = {
  *       "html" = "Drupal\Core\Entity\Routing\AdminHtmlRouteProvider",
  *     },

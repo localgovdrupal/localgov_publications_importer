@@ -28,4 +28,5 @@ class Linebreaks extends TransformPluginBase {
   public function order(): int {
     return 30;
   }
+
 }

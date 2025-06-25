@@ -32,6 +32,12 @@ class ImportPipelineListBuilder extends ConfigEntityListBuilder {
     return $row + parent::buildRow($entity);
   }
 
+  /**
+   * Get the title for the list page.
+   *
+   * @return string
+   *   The page title.
+   */
   public function getTitle() {
     return 'Import Pipelines';
   }
@@ -49,4 +55,5 @@ class ImportPipelineListBuilder extends ConfigEntityListBuilder {
     ];
     return $build;
   }
+
 }

@@ -23,6 +23,11 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 )]
 class Ai extends TransformPluginBase implements ContainerFactoryPluginInterface {
 
+  /**
+   * The default AI prompt to use for transforming content.
+   *
+   * This can be overridden by the plugin's configuration.
+   */
   protected string $prompt = 'This plain text document has been stripped of its formatting. Add the formatting back in, and give me the whole document back as valid HTML.';
 
   /**
@@ -127,4 +132,5 @@ class Ai extends TransformPluginBase implements ContainerFactoryPluginInterface 
       ],
     ];
   }
+
 }

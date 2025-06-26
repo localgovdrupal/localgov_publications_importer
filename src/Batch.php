@@ -41,6 +41,13 @@ class Batch {
     /** @var \Drupal\localgov_publications_importer\Import $import */
     $import = $context['results']['import'];
 
+    if (isset($context['sandbox']['done'])) {
+      $totalSteps = count($pluginIds) * count($import->getPages());
+      $completedSteps = count($context['sandbox']['done'], COUNT_RECURSIVE);
+      $context['finished'] = $completedSteps / $totalSteps;
+    }
+
+
     // Do this one step at a time by limiting the loop using the sandbox.
     // @todo Ask the plugin at this point if it wants to work page by page.
     // Then if not we could just do one call.
@@ -55,6 +62,8 @@ class Batch {
       }
     }
 
+    // Set this to 1 if we make it out of the loop,
+    // to ensure we finish this step.
     $context['finished'] = 1;
   }
 

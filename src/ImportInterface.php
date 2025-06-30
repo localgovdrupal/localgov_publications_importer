@@ -38,4 +38,9 @@ interface ImportInterface {
    */
   public function addPage(PageInterface $page): void;
 
+  /**
+   * Remove a page from this import.
+   */
+  public function removePage(int $pageNumber): void;
+
 }

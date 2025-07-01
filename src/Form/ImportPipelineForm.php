@@ -17,7 +17,7 @@ class ImportPipelineForm extends EntityForm {
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container) {
+  public static function create(ContainerInterface $container): static {
     return new static(
       $container->get(ExtractOperationManager::class),
       $container->get(TransformOperationManager::class),
@@ -35,7 +35,7 @@ class ImportPipelineForm extends EntityForm {
   /**
    * {@inheritdoc}
    */
-  public function form(array $form, FormStateInterface $form_state) {
+  public function form(array $form, FormStateInterface $form_state): array {
     /** @var \Drupal\localgov_publications_importer\Entity\ImportPipeline $entity */
     $entity = $this->entity;
 
@@ -185,28 +185,28 @@ class ImportPipelineForm extends EntityForm {
   /**
    * AJAX callback for the extract plugin configuration.
    */
-  public function showExtractPluginConfiguration(array &$form, FormStateInterface $form_state) {
+  public function showExtractPluginConfiguration(array &$form, FormStateInterface $form_state): array {
     return $form['extract_plugin_configuration'];
   }
 
   /**
    * AJAX callback for the transform plugins.
    */
-  public function addTransform(array &$form, FormStateInterface $form_state) {
+  public function addTransform(array &$form, FormStateInterface $form_state): array {
     return $form['transform'];
   }
 
   /**
    * AJAX callback for the save plugin configuration.
    */
-  public function showSavePluginConfiguration(array &$form, FormStateInterface $form_state) {
+  public function showSavePluginConfiguration(array &$form, FormStateInterface $form_state): array {
     return $form['save_plugin_configuration'];
   }
 
   /**
    * {@inheritdoc}
    */
-  public function save(array $form, FormStateInterface $form_state) {
+  public function save(array $form, FormStateInterface $form_state): int {
 
     /** @var \Drupal\localgov_publications_importer\Entity\ImportPipeline $entity */
     $entity = $this->entity;
@@ -239,8 +239,12 @@ class ImportPipelineForm extends EntityForm {
       $entity->transform_plugin_configurations[] = $row['configuration'] ?? [];
     }
 
+    $return = $entity->isNew() ? SAVED_NEW : SAVED_UPDATED;
+
     $entity->save();
     $form_state->setRedirect('entity.import_pipeline.collection');
+
+    return $return;
   }
 
   /**
@@ -249,7 +253,7 @@ class ImportPipelineForm extends EntityForm {
    * @return array
    *   Array of extract plugin options.
    */
-  protected function getExtractPluginOptions() {
+  protected function getExtractPluginOptions(): array {
     return $this->getPluginOptions($this->extractOperationManager->getDefinitions());
   }
 
@@ -259,7 +263,7 @@ class ImportPipelineForm extends EntityForm {
    * @return array
    *   Array of transform plugin options.
    */
-  protected function getTransformPluginOptions() {
+  protected function getTransformPluginOptions(): array {
     return $this->getPluginOptions($this->transformOperationManager->getDefinitions());
   }
 
@@ -269,7 +273,7 @@ class ImportPipelineForm extends EntityForm {
    * @return array
    *   Array of save plugin options.
    */
-  protected function getSavePluginOptions() {
+  protected function getSavePluginOptions(): array {
     return $this->getPluginOptions($this->saveOperationManager->getDefinitions());
   }
 
@@ -280,9 +284,9 @@ class ImportPipelineForm extends EntityForm {
    *   Plugin definitions array.
    *
    * @return array
-   *   Array of plugin options.
+   *   Array of plugin options, id => label.
    */
-  protected function getPluginOptions($pluginDefinitions) {
+  protected function getPluginOptions(array $pluginDefinitions): array {
     $options = [];
     foreach ($pluginDefinitions as $id => $pluginDefinition) {
       $options[$id] = $pluginDefinition['label'];

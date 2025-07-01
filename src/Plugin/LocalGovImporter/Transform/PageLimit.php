@@ -62,7 +62,7 @@ class PageLimit extends TransformPluginBase {
         '#attributes' => [
           'type' => 'number',
         ],
-        '#description' => "The number of pages the import will be limited to.",
+        '#description' => new TranslatableMarkup("The number of pages the import will be limited to."),
         '#default_value' => $this->limit,
       ],
     ];

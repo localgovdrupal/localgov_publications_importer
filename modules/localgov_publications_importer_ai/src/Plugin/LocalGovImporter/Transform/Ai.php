@@ -127,7 +127,7 @@ class Ai extends TransformPluginBase implements ContainerFactoryPluginInterface 
     return [
       'prompt' => [
         '#type' => 'textarea',
-        '#description' => "The prompt that will be sent to the AI to describe what you'd like to do with the extracted content",
+        '#description' => new TranslatableMarkup("The prompt that will be sent to the AI to describe what you'd like to do with the extracted content"),
         '#default_value' => $this->prompt,
       ],
     ];

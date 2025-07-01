@@ -16,6 +16,11 @@ use Drupal\localgov_publications_importer\ImportInterface;
 )]
 class PageLimit extends TransformPluginBase {
 
+  /**
+   * The maximum number of pages to import.
+   *
+   * @var int
+   */
   protected int $limit = 100;
 
   /**
@@ -62,4 +67,5 @@ class PageLimit extends TransformPluginBase {
       ],
     ];
   }
+
 }

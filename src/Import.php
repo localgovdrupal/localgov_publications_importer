@@ -76,4 +76,5 @@ class Import implements ImportInterface {
   public function removePage(int $pageNumber): void {
     unset($this->pages[$pageNumber]);
   }
+
 }

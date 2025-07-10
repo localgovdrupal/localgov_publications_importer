@@ -44,12 +44,11 @@ class Batch {
     if (isset($context['sandbox']['done'])) {
       $totalSteps = count($pluginIds) * count($import->getPages());
       $completedSteps = 0;
-      foreach ($context['sandbox']['done'] as $plugin => $pages) {
-        $completedSteps += count($pages);
+      foreach ($context['sandbox']['done'] as $steps) {
+        $completedSteps += count($steps);
       }
       $context['finished'] = $completedSteps / $totalSteps;
     }
-
 
     // Do this one step at a time by limiting the loop using the sandbox.
     // @todo Ask the plugin at this point if it wants to work page by page.

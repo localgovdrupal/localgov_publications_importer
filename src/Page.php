@@ -29,6 +29,13 @@ class Page implements PageInterface {
   protected ?int $pageNumber = NULL;
 
   /**
+   * An array of image objects that were found on the page.
+   *
+   * @var \Drupal\localgov_publications_importer\Image[]
+   */
+  protected array $images = [];
+
+  /**
    * {@inheritdoc}
    */
   public function setTitle(string $title): void {
@@ -68,6 +75,20 @@ class Page implements PageInterface {
    */
   public function getPageNumber(): ?int {
     return $this->pageNumber;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function addImage(Image $image): void {
+    $this->images[] = $image;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getImages(): array {
+    return $this->images;
   }
 
 }

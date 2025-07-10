@@ -3,8 +3,10 @@
 namespace Drupal\localgov_publications_importer\Plugin\LocalGovImporter\Save;
 
 use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\file\Entity\File;
 use Drupal\localgov_publications_importer\Attribute\Save;
 use Drupal\localgov_publications_importer\ImportInterface;
+use Drupal\media\Entity\Media;
 use Drupal\node\NodeInterface;
 use Drupal\paragraphs\Entity\Paragraph;
 
@@ -42,6 +44,8 @@ class Publication extends SavePluginBase {
         ];
       }
 
+      $paragraphs = [];
+
       /** @var \Drupal\node\NodeInterface $publicationPage */
       $publicationPage = $nodeStorage->create([
         'type' => 'localgov_publication_page',
@@ -59,13 +63,76 @@ class Publication extends SavePluginBase {
         ],
       ]);
       $paragraph->save();
+      $paragraphs[] = $paragraph;
 
-      $publicationPage->get('localgov_publication_content')->setValue([
-        [
+      foreach ($page->getImages() as $image) {
+
+        // Skip any images that didn't result in usable files.
+        if (is_null($image->getFileId())) {
+          continue;
+        }
+
+        $media = Media::create([
+          'name' => '',
+          'bundle' => 'image',
+          'uid' => 1,
+          'langcode' => 'en',
+          'status' => 1,
+          'field_media_image' => [
+            'target_id' => $image->getFileId(),
+            'alt' => 'Alt',
+            'title' => 'Title',
+          ],
+        ]);
+        $media->save();
+
+        $paragraph = Paragraph::create([
+          'type' => 'localgov_image',
+          'localgov_image' => [
+            'target_id' => $media->id(),
+          ],
+          'localgov_caption' => [
+            // @todo Something meaningful.
+            'value' => '',
+          ],
+        ]);
+        $paragraph->save();
+        $paragraphs[] = $paragraph;
+
+        // Reset the crop on the image to freestyle.
+        // The default landscape format cuts off the
+        // top and bottom of tall images.
+        $file = File::load($image->getFileId());
+
+        // There's no crop saved at this point, so we don't need to update one.
+        // Just save a new one.
+        // This saves a crop in the right place, but it doesn't get used?
+        $crops = $this->entityTypeManager
+          ->getStorage('crop')
+          ->create([
+
+                         'type' => 'freestyle',
+                     'langcode' => 'en',
+                    'entity_id' =>  $file->id(),
+                  'entity_type' => 'file',
+                          'uri' => $file->getFileUri(),
+//                       'height': NULL
+//                        width: NULL
+//                            x: 400
+//                            y: 600
+//             default_langcode: 1
+//revision_translation_affected: 1
+          ])->save();
+
+
+      }
+      $pageContent = $publicationPage->get('localgov_publication_content');
+      foreach ($paragraphs as $paragraph) {
+        $pageContent[] = [
           'target_id' => $paragraph->id(),
           'target_revision_id' => $paragraph->getRevisionId(),
-        ],
-      ]);
+        ];
+      }
 
       $publicationPage->save();
 

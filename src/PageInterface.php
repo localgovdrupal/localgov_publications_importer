@@ -37,4 +37,16 @@ interface PageInterface {
    */
   public function getPageNumber(): ?int;
 
+  /**
+   * Add an image to the page.
+   */
+  public function addImage(Image $image): void;
+
+  /**
+   * Get the images that have been added to the page.
+   *
+   * @return Image[]
+   *   The images that have been added to this page.
+   */
+  public function getImages(): array;
 }

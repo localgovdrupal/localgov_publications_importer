@@ -3,11 +3,13 @@
 namespace Drupal\localgov_publications_importer_ai\Plugin\LocalGovImporter\Transform;
 
 use Drupal\ai\AiProviderPluginManager;
+use Drupal\ai\Exception\AiRequestErrorException;
 use Drupal\ai\OperationType\Chat\ChatInput;
 use Drupal\ai\OperationType\Chat\ChatMessage;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\localgov_publications_importer\Attribute\Transform;
+use Drupal\localgov_publications_importer\Exception\RetryableTransformFailure;
 use Drupal\localgov_publications_importer\PageInterface;
 use Drupal\localgov_publications_importer\Plugin\LocalGovImporter\Transform\TransformPluginBase;
 use Masterminds\HTML5;
@@ -89,9 +91,10 @@ class Ai extends TransformPluginBase implements ContainerFactoryPluginInterface 
     try {
       $message = $provider->chat($messages, $sets['model_id'])->getNormalized();
     }
-    catch (\Drupal\ai\Exception\AiRequestErrorException $e) {
-      // AiRequestErrorException is thrown for timeouts. We could retry this request.
-      throw new RetryableTransformFailure("Request to AI failed.", 0 , $e);
+    catch (AiRequestErrorException $e) {
+      // AiRequestErrorException is thrown for timeouts.
+      // We could retry this request.
+      throw new RetryableTransformFailure("Request to AI failed.", 0, $e);
     }
 
     // This is a fallback. It'll be overwritten below if we find a body element

@@ -2,6 +2,7 @@
 
 namespace Drupal\localgov_publications_importer;
 
+use Drupal\localgov_publications_importer\Exception\RetryableTransformFailure;
 use Drupal\localgov_publications_importer\Service\Importer;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 
@@ -58,8 +59,20 @@ class Batch {
         if (isset($context['sandbox']['done'][$pluginId][$pageNumber])) {
           continue;
         }
-        $importer->transform($import, $pluginId, $pageNumber);
-        $context['sandbox']['done'][$pluginId][$pageNumber] = TRUE;
+        try {
+          $importer->transform($import, $pluginId, $pageNumber);
+          $context['sandbox']['done'][$pluginId][$pageNumber] = TRUE;
+        }
+        catch (RetryableTransformFailure $e) {
+          // If we end up in here, 'done' won't get set in the sandbox for this
+          // plugin/page combo. It'll therefore get retried.
+          if (isset($context['sandbox']['retries'][$pluginId][$pageNumber])) {
+            // If we already retried, and failed again, don't keep trying.
+            $context['sandbox']['done'][$pluginId][$pageNumber] = TRUE;
+            \Drupal::messenger()->addError('Transform ' . $pluginId . ' for page ' . $pluginId . ' failed.');
+          }
+          $context['sandbox']['retries'][$pluginId][$pageNumber] = 1;
+        }
         return;
       }
     }

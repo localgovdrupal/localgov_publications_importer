@@ -79,14 +79,22 @@ class Ai extends TransformPluginBase implements ContainerFactoryPluginInterface 
       return;
     }
 
+    /** @var \Drupal\ai\OperationType\Chat\ChatInterface $provider */
     $provider = $this->aiProvider->createInstance($sets['provider_id']);
     $messages = new ChatInput([
       new chatMessage('system', $this->prompt),
       new chatMessage('user', $page->getContent()),
     ]);
-    $message = $provider->chat($messages, $sets['model_id'])->getNormalized();
 
-    // This is a fallback. It'll be overwritten below if we find a title element
+    try {
+      $message = $provider->chat($messages, $sets['model_id'])->getNormalized();
+    }
+    catch (\Drupal\ai\Exception\AiRequestErrorException $e) {
+      // AiRequestErrorException is thrown for timeouts. We could retry this request.
+      throw new RetryableTransformFailure("Request to AI failed.", 0 , $e);
+    }
+
+    // This is a fallback. It'll be overwritten below if we find a body element
     // in the returned message.
     $page->setContent($message->getText());
 

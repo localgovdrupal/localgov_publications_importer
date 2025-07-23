@@ -75,6 +75,7 @@ class Importer {
     foreach ($this->transformOperations() as $transformOperation) {
       if ($transformOperation->getPluginId() === $pluginID) {
         $transformOperation->transform($import, $page);
+        break;
       }
     }
   }

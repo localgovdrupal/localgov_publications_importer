@@ -2,6 +2,7 @@
 
 namespace Drupal\localgov_publications_importer;
 
+use Drupal\localgov_publications_importer\Exception\RetryableTransformFailure;
 use Drupal\localgov_publications_importer\Service\Importer;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 
@@ -13,23 +14,25 @@ class Batch {
   /**
    * Get the importer service.
    */
-  protected static function importer(): Importer {
-    return \Drupal::service('localgov_publications_importer.importer');
+  protected static function importer(string $importPipelineId): Importer {
+    $importer = \Drupal::service('localgov_publications_importer.importer');
+    $importer->setPipeline($importPipelineId);
+    return $importer;
   }
 
   /**
    * Runs the extract plugin.
    */
-  public static function extract(string $filename, array &$context): void {
-    $context['results']['import'] = self::importer()->extract($filename);
+  public static function extract(string $importPipelineId, string $filename, array &$context): void {
+    $context['results']['import'] = self::importer($importPipelineId)->extract($filename);
   }
 
   /**
    * Runs the transform plugins, one page at a time.
    */
-  public static function transform(array &$context): void {
+  public static function transform(string $importPipelineId, array &$context): void {
 
-    $importer = self::importer();
+    $importer = self::importer($importPipelineId);
 
     $pluginIds = $importer->getTransformPluginIds();
 
@@ -39,6 +42,15 @@ class Batch {
     /** @var \Drupal\localgov_publications_importer\Import $import */
     $import = $context['results']['import'];
 
+    if (isset($context['sandbox']['done'])) {
+      $totalSteps = count($pluginIds) * count($import->getPages());
+      $completedSteps = 0;
+      foreach ($context['sandbox']['done'] as $steps) {
+        $completedSteps += count($steps);
+      }
+      $context['finished'] = $completedSteps / $totalSteps;
+    }
+
     // Do this one step at a time by limiting the loop using the sandbox.
     // @todo Ask the plugin at this point if it wants to work page by page.
     // Then if not we could just do one call.
@@ -47,21 +59,35 @@ class Batch {
         if (isset($context['sandbox']['done'][$pluginId][$pageNumber])) {
           continue;
         }
-        $importer->transform($import, $pluginId, $pageNumber);
-        $context['sandbox']['done'][$pluginId][$pageNumber] = TRUE;
+        try {
+          $importer->transform($import, $pluginId, $pageNumber);
+          $context['sandbox']['done'][$pluginId][$pageNumber] = TRUE;
+        }
+        catch (RetryableTransformFailure $e) {
+          // If we end up in here, 'done' won't get set in the sandbox for this
+          // plugin/page combo. It'll therefore get retried.
+          if (isset($context['sandbox']['retries'][$pluginId][$pageNumber])) {
+            // If we already retried, and failed again, don't keep trying.
+            $context['sandbox']['done'][$pluginId][$pageNumber] = TRUE;
+            \Drupal::messenger()->addError('Transform ' . $pluginId . ' for page ' . $pluginId . ' failed.');
+          }
+          $context['sandbox']['retries'][$pluginId][$pageNumber] = 1;
+        }
         return;
       }
     }
 
+    // Set this to 1 if we make it out of the loop,
+    // to ensure we finish this step.
     $context['finished'] = 1;
   }
 
   /**
    * Runs the save plugin.
    */
-  public static function save(array &$context): void {
+  public static function save(string $importPipelineId, array &$context): void {
     // We might not be importing to nodes, eventually... Generalise this.
-    $node = self::importer()->save($context['results']['import']);
+    $node = self::importer($importPipelineId)->save($context['results']['import']);
     $context['results']['redirect'] = '/node/' . $node->id();
   }
 

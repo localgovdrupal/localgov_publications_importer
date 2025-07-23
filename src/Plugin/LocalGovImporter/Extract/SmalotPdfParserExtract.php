@@ -2,13 +2,11 @@
 
 namespace Drupal\localgov_publications_importer\Plugin\LocalGovImporter\Extract;
 
-use Drupal\Component\Plugin\PluginBase;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\localgov_publications_importer\Attribute\Extract;
 use Drupal\localgov_publications_importer\Import;
 use Drupal\localgov_publications_importer\ImportInterface;
 use Drupal\localgov_publications_importer\Page;
-use Drupal\localgov_publications_importer\Plugin\ExtractInterface;
 use Smalot\PdfParser\Config as PdfParserConfig;
 use Smalot\PdfParser\Parser as PdfParser;
 
@@ -20,22 +18,7 @@ use Smalot\PdfParser\Parser as PdfParser;
   label: new TranslatableMarkup('Smalot extract'),
   description: new TranslatableMarkup('Extract operation that uses Smalot/pdfparser')
 )]
-class SmalotPdfParserExtract extends PluginBase implements ExtractInterface {
-
-  /**
-   * Path to the file to import.
-   *
-   * @var string
-   */
-  protected string $pathToFile;
-
-  /**
-   * {@inheritDoc}
-   */
-  public function setSource(string $pathToFile): self {
-    $this->pathToFile = $pathToFile;
-    return $this;
-  }
+class SmalotPdfParserExtract extends ExtractPluginBase {
 
   /**
    * {@inheritDoc}

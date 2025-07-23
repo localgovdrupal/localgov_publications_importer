@@ -3,11 +3,12 @@
 namespace Drupal\localgov_publications_importer\Service;
 
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\localgov_publications_importer\Entity\ImportPipeline;
 use Drupal\localgov_publications_importer\ExtractOperationManager;
 use Drupal\localgov_publications_importer\Import;
 use Drupal\localgov_publications_importer\Plugin\ExtractInterface;
 use Drupal\localgov_publications_importer\Plugin\SaveInterface;
-use Drupal\localgov_publications_importer\Plugin\TransformInterface;
 use Drupal\localgov_publications_importer\SaveOperationManager;
 use Drupal\localgov_publications_importer\TransformOperationManager;
 use Drupal\node\NodeInterface;
@@ -18,13 +19,30 @@ use Drupal\node\NodeInterface;
 class Importer {
 
   /**
+   * The import pipeline that we're using.
+   *
+   * This controls which plugins we use, their order and configuration.
+   */
+  protected ImportPipeline $pipeline;
+
+  /**
    * Constructor.
    */
   public function __construct(
     protected ExtractOperationManager $extractOperationManager,
     protected TransformOperationManager $transformOperationManager,
     protected SaveOperationManager $saveOperationManager,
+    protected EntityTypeManagerInterface $entityTypeManager,
   ) {
+  }
+
+  /**
+   * Set the pipeline we'll be using to import content.
+   */
+  public function setPipeline(string $importPipelineId): void {
+    $this->pipeline = $this->entityTypeManager
+      ->getStorage('import_pipeline')
+      ->load($importPipelineId);
   }
 
   /**
@@ -57,6 +75,7 @@ class Importer {
     foreach ($this->transformOperations() as $transformOperation) {
       if ($transformOperation->getPluginId() === $pluginID) {
         $transformOperation->transform($import, $page);
+        break;
       }
     }
   }
@@ -72,28 +91,14 @@ class Importer {
    * Gets the extract operation to use.
    */
   protected function extractOperation(): ExtractInterface {
-    $operationDefinitions = $this->extractOperationManager->getDefinitions();
-
-    // @todo There should only be one extract operation in this pipeline.
-    // Provide a way to choose it, and the other operations!
-    $operationDefinition = reset($operationDefinitions);
-
-    /** @var \Drupal\localgov_publications_importer\Plugin\ExtractInterface $operation */
-    $operation = $this->extractOperationManager->createInstance($operationDefinition['id']);
-
-    return $operation;
+    return $this->extractOperationManager->createInstance($this->pipeline->extract_plugin, $this->pipeline->extract_plugin_configuration);
   }
 
   /**
    * Gets the IDs of the transform operations to use.
    */
   public function getTransformPluginIds(): array {
-    $ids = [];
-    $operations = $this->transformOperations();
-    foreach ($operations as $operation) {
-      $ids[] = $operation->getPluginId();
-    }
-    return $ids;
+    return $this->pipeline->transform_plugins;
   }
 
   /**
@@ -104,14 +109,10 @@ class Importer {
    */
   protected function transformOperations(): array {
     $operations = [];
-    foreach ($this->transformOperationManager->getDefinitions() as $operationDefinition) {
-      $operations[] = $this->transformOperationManager->createInstance($operationDefinition['id']);
+    foreach ($this->pipeline->transform_plugins as $index => $pluginId) {
+      $pluginConfig = $this->pipeline->transform_plugin_configurations[$index] ?? [];
+      $operations[] = $this->transformOperationManager->createInstance($pluginId, $pluginConfig);
     }
-
-    usort($operations, function (TransformInterface $a, TransformInterface $b) {
-      return $a->order() <=> $b->order();
-    });
-
     return $operations;
   }
 
@@ -119,16 +120,7 @@ class Importer {
    * Gets the save operation to use.
    */
   protected function saveOperation(): SaveInterface {
-    $operationDefinitions = $this->saveOperationManager->getDefinitions();
-
-    // @todo There should only be one save operation in this pipeline.
-    // Provide a way to choose it, and the other operations!
-    $operationDefinition = reset($operationDefinitions);
-
-    /** @var \Drupal\localgov_publications_importer\Plugin\SaveInterface $operation */
-    $operation = $this->saveOperationManager->createInstance($operationDefinition['id']);
-
-    return $operation;
+    return $this->saveOperationManager->createInstance($this->pipeline->save_plugin, $this->pipeline->save_plugin_configuration);
   }
 
 }

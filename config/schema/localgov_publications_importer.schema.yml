@@ -1,0 +1,36 @@
+drupal\localgov_publications_importer\Entity\ImportPipeline:
+  type: config_entity
+  label: 'Import Pipeline'
+  mapping:
+    id:
+      type: string
+      label: 'ID'
+    label:
+      type: label
+      label: 'Label'
+    extract_plugin:
+      type: string
+      label: 'Extract Plugin'
+    extract_plugin_configuration:
+      type: sequence
+      label: 'Extract Plugin Configuration'
+      sequence:
+        - type: any
+    transform_plugins:
+      type: sequence
+      label: 'Transform Plugins'
+      sequence:
+        - type: string
+    transform_plugin_configurations:
+      type: sequence
+      label: 'Transform Plugin Configurations'
+      sequence:
+        - type: any
+    save_plugin:
+      type: string
+      label: 'Save Plugin'
+    save_plugin_configuration:
+      type: sequence
+      label: 'Save Plugin Configuration'
+      sequence:
+        - type: any

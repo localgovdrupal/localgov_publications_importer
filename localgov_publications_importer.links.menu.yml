@@ -5,3 +5,8 @@ localgov_publications_importer.import:
   route_name: localgov_publications_importer.import
   weight: 100
   menu_name: admin
+entity.import_pipeline.collection:
+  title: Import Pipelines
+  description: Create and manage import pipelines.
+  route_name: entity.import_pipeline.collection
+  parent: system.admin_config_system

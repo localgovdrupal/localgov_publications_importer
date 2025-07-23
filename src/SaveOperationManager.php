@@ -10,6 +10,8 @@ use Drupal\localgov_publications_importer\Plugin\SaveInterface;
 
 /**
  * Manages discovery and instantiation of Save operations.
+ *
+ * @method SaveInterface createInstance(string $plugin_id, array $configuration = []);
  */
 class SaveOperationManager extends DefaultPluginManager {
 

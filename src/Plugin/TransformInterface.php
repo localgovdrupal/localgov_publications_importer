@@ -2,8 +2,8 @@
 
 namespace Drupal\localgov_publications_importer\Plugin;
 
-use Drupal\localgov_publications_importer\ImportInterface;
 use Drupal\Component\Plugin\PluginInspectionInterface;
+use Drupal\localgov_publications_importer\ImportInterface;
 
 /**
  * Interface for Transform Operation plugins.
@@ -23,5 +23,23 @@ interface TransformInterface extends PluginInspectionInterface {
    * Low numbers will be run before higher numbers.
    */
   public function order(): int;
+
+  /**
+   * Is this plugin configurable?
+   *
+   * If it's not, we won't show fields to configure it in the pipeline form.
+   *
+   * @return bool
+   *   True if configurable. False otherwise.
+   */
+  public function isConfigurable(): bool;
+
+  /**
+   * Get the configuration form fields for this plugin.
+   *
+   * @return array
+   *   Form API fields.
+   */
+  public function getConfigurationForm(): array;
 
 }

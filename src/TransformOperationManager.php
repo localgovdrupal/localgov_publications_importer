@@ -10,6 +10,8 @@ use Drupal\localgov_publications_importer\Plugin\TransformInterface;
 
 /**
  * Manages discovery and instantiation of Transform operations.
+ *
+ * @method TransformInterface createInstance(string $plugin_id, array $configuration = []);
  */
 class TransformOperationManager extends DefaultPluginManager {
 

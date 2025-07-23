@@ -70,4 +70,11 @@ class Import implements ImportInterface {
     $this->pages[] = $page;
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function removePage(int $pageNumber): void {
+    unset($this->pages[$pageNumber]);
+  }
+
 }

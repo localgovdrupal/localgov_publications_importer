@@ -1,0 +1,6 @@
+entity.import_pipeline.add:
+  title: Add Import Pipeline
+  route_name: entity.import_pipeline.add_form
+  weight: 15
+  appears_on:
+    - entity.import_pipeline.collection

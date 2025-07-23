@@ -3,11 +3,13 @@
 namespace Drupal\localgov_publications_importer_ai\Plugin\LocalGovImporter\Transform;
 
 use Drupal\ai\AiProviderPluginManager;
+use Drupal\ai\Exception\AiRequestErrorException;
 use Drupal\ai\OperationType\Chat\ChatInput;
 use Drupal\ai\OperationType\Chat\ChatMessage;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\localgov_publications_importer\Attribute\Transform;
+use Drupal\localgov_publications_importer\Exception\RetryableTransformFailure;
 use Drupal\localgov_publications_importer\PageInterface;
 use Drupal\localgov_publications_importer\Plugin\LocalGovImporter\Transform\TransformPluginBase;
 use Masterminds\HTML5;
@@ -22,6 +24,13 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
   description: new TranslatableMarkup('Uses AI to reintroduce missing document structure.')
 )]
 class Ai extends TransformPluginBase implements ContainerFactoryPluginInterface {
+
+  /**
+   * The default AI prompt to use for transforming content.
+   *
+   * This can be overridden by the plugin's configuration.
+   */
+  protected string $prompt = 'This plain text document has been stripped of its formatting. Add the formatting back in, and give me the whole document back as valid HTML.';
 
   /**
    * {@inheritdoc}
@@ -45,6 +54,10 @@ class Ai extends TransformPluginBase implements ContainerFactoryPluginInterface 
     protected AiProviderPluginManager $aiProvider,
   ) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
+
+    if (isset($configuration['prompt'])) {
+      $this->prompt = $configuration['prompt'];
+    }
   }
 
   /**
@@ -68,14 +81,23 @@ class Ai extends TransformPluginBase implements ContainerFactoryPluginInterface 
       return;
     }
 
+    /** @var \Drupal\ai\OperationType\Chat\ChatInterface $provider */
     $provider = $this->aiProvider->createInstance($sets['provider_id']);
     $messages = new ChatInput([
-      new chatMessage('system', 'This plain text document has been stripped of its formatting. Please add the formatting back in, and give me the whole document back as valid HTML.'),
+      new chatMessage('system', $this->prompt),
       new chatMessage('user', $page->getContent()),
     ]);
-    $message = $provider->chat($messages, $sets['model_id'])->getNormalized();
 
-    // This is a fallback. It'll be overwritten below if we find a title element
+    try {
+      $message = $provider->chat($messages, $sets['model_id'])->getNormalized();
+    }
+    catch (AiRequestErrorException $e) {
+      // AiRequestErrorException is thrown for timeouts.
+      // We could retry this request.
+      throw new RetryableTransformFailure("Request to AI failed.", 0, $e);
+    }
+
+    // This is a fallback. It'll be overwritten below if we find a body element
     // in the returned message.
     $page->setContent($message->getText());
 
@@ -100,6 +122,26 @@ class Ai extends TransformPluginBase implements ContainerFactoryPluginInterface 
       $content = $dom->saveHTML($body);
       $page->setContent($content);
     }
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  public function isConfigurable(): bool {
+    return TRUE;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  public function getConfigurationForm(): array {
+    return [
+      'prompt' => [
+        '#type' => 'textarea',
+        '#description' => new TranslatableMarkup("The prompt that will be sent to the AI to describe what you'd like to do with the extracted content"),
+        '#default_value' => $this->prompt,
+      ],
+    ];
   }
 
 }

@@ -62,7 +62,7 @@ class Images extends TransformPluginBase implements TransformInterface {
           // aren't images yet. We need to rebuild the pixel data in the source
           // file into an image and save it.
           $imageFile = $this->createImageFromXObjectData(file_get_contents($image->getXObjectDataFile()), $width, $height, $bitsPerComponent, $colorSpace);
-          if ($image instanceof GdImage) {
+          if ($imageFile instanceof GdImage) {
             // Write a png into /tmp. We'll read it and save it properly.
             imagepng($imageFile, $dataFileName . '.png');
             $fileEntity = $fileRepository->writeData(file_get_contents($dataFileName . '.png'), $imageFileName);

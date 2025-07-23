@@ -13,9 +13,14 @@ use Drupal\localgov_publications_importer\Import;
 use Drupal\localgov_publications_importer\ImportInterface;
 use Drupal\localgov_publications_importer\Page;
 use Smalot\PdfParser\Config as PdfParserConfig;
+use Smalot\PdfParser\Document;
+use Smalot\PdfParser\Element\ElementMissing;
 use Smalot\PdfParser\Element\ElementName;
+use Smalot\PdfParser\Element\ElementXRef;
 use Smalot\PdfParser\Parser as PdfParser;
+use Smalot\PdfParser\PDFObject;
 use Smalot\PdfParser\XObject\Image as XObjectImage;
+use Smalot\PdfParser\Page as PdfPage;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -31,7 +36,12 @@ class SmalotPdfParserExtract extends ExtractPluginBase implements ContainerFacto
   /**
    * An array of MD5 hashes that we'll use to not import duplicated images.
    */
-  protected $importedImages = [];
+  protected array $importedImages = [];
+
+  /**
+   * The directory where we'll save temporary files.
+   */
+  protected string $tempDir = 'temporary://localgov_publications_importer';
 
   /**
    * {@inheritdoc}
@@ -64,14 +74,7 @@ class SmalotPdfParserExtract extends ExtractPluginBase implements ContainerFacto
    */
   public function getImport(): ?ImportInterface {
 
-    $config = new PdfParserConfig();
-    // An empty string can prevent words from breaking up.
-    $config->setHorizontalOffset('');
-
-    // Parse PDF file and build necessary objects.
-    $parser = new PdfParser([], $config);
-    $pdf = $parser->parseFile($this->pathToFile);
-
+    $pdf = $this->parseFile();
     $import = new Import($this->pathToFile);
 
     $details = $pdf->getDetails();
@@ -90,6 +93,8 @@ class SmalotPdfParserExtract extends ExtractPluginBase implements ContainerFacto
       return intval($a->getPageNumber()) <=> intval($b->getPageNumber());
     });
 
+    $this->fileSystem->prepareDirectory($this->tempDir, FileSystemInterface::CREATE_DIRECTORY | FileSystemInterface::MODIFY_PERMISSIONS);
+
     foreach ($pdfPages as $pdfPage) {
 
       // Don't add empty pages.
@@ -102,64 +107,165 @@ class SmalotPdfParserExtract extends ExtractPluginBase implements ContainerFacto
       $page->setTitle('Page ' . $pdfPage->getPageNumber());
       $page->setContent($content);
       $page->setPageNumber($pdfPage->getPageNumber());
+
+      $this->addImages($pdfPage, $page);
+      $this->addLinks($pdfPage, $page);
+
       $import->addPage($page);
 
-      $tempDir = 'temporary://localgov_publications_importer';
-      $this->fileSystem->prepareDirectory($tempDir, FileSystemInterface::CREATE_DIRECTORY | FileSystemInterface::MODIFY_PERMISSIONS);
-
-      foreach ($pdfPage->getXObjects() as $xObject) {
-        if (!$xObject instanceof XObjectImage) {
-          continue;
-        }
-
-        $image = $xObject;
-
-        // There are duplicate references on the page sometimes.
-        // De-dupe the Image XObjects using the MD5 hash of the content.
-        // @phpstan-ignore-next-line
-        $imageHash = md5($image->getContent());
-        if (in_array($imageHash, $this->importedImages, TRUE)) {
-          continue;
-        }
-        $this->importedImages[] = $imageHash;
-
-        // These could all be $image->get('Filter'); I think...
-        $filter = $image->getHeader()->get('Filter')->getContent();
-        $width = (int) $image->getHeader()->get('Width')->getContent();
-        $height = (int) $image->getHeader()->get('Height')->getContent();
-        $bitsPerComponent = (int) $image->getHeader()->get('BitsPerComponent')->getContent();
-
-        // We need to get the image color space like this for some reason.
-        $elements = $image->getHeader()->getElements();
-        if (isset($elements['ColorSpace'])) {
-          if ($elements['ColorSpace'] instanceof ElementName) {
-            $colorSpace = $elements['ColorSpace']->getContent();
-          }
-          else {
-            // This is when it's a pdfObject??
-            $colorSpace = $elements['ColorSpace']->getHeader()
-              ->get(0)
-              ->getContent();
-          }
-        }
-        else {
-          $colorSpace = '';
-        }
-
-        $dataFile = $tempDir . '/' . $this->uuid->generate();
-        $this->fileSystem->saveData($image->getContent(), $dataFile, FileExists::Replace);
-
-        $image = new Image();
-        $image->setWidth($width);
-        $image->setHeight($height);
-        $image->setBitsPerComponent($bitsPerComponent);
-        $image->setColorSpace($colorSpace);
-        $image->setFilter($filter);
-        $image->setXObjectDataFile($dataFile);
-        $page->addImage($image);
-      }
     }
     return $import;
   }
 
+  /**
+   * Set up the parser and parse the file.
+   */
+  protected function parseFile(): Document {
+    $config = new PdfParserConfig();
+    // An empty string can prevent words from breaking up.
+    $config->setHorizontalOffset('');
+    $parser = new PdfParser([], $config);
+    return $parser->parseFile($this->pathToFile);
+  }
+
+  /**
+   * Extracts the images from this PDF page.
+   *
+   * The image content is written to a temp file, and the metadata is saved to
+   * an object on the extract page, so we can use it later in the process.
+   */
+  protected function addImages(PdfPage $pdfPage, Page $exportPage): void {
+    foreach ($pdfPage->getXObjects() as $xObject) {
+      if (!$xObject instanceof XObjectImage) {
+        continue;
+      }
+
+      $image = $xObject;
+
+      // There are duplicate references on the page sometimes.
+      // De-dupe the Image XObjects using the MD5 hash of the content.
+      // @phpstan-ignore-next-line
+      $imageHash = md5($image->getContent());
+      if (in_array($imageHash, $this->importedImages, TRUE)) {
+        continue;
+      }
+      $this->importedImages[] = $imageHash;
+
+      // These could all be $image->get('Filter'); I think...
+      $filter = $image->getHeader()->get('Filter')->getContent();
+      $width = (int) $image->getHeader()->get('Width')->getContent();
+      $height = (int) $image->getHeader()->get('Height')->getContent();
+      $bitsPerComponent = (int) $image->getHeader()->get('BitsPerComponent')->getContent();
+
+      // We need to get the image color space like this for some reason.
+      $elements = $image->getHeader()->getElements();
+      if (isset($elements['ColorSpace'])) {
+        if ($elements['ColorSpace'] instanceof ElementName) {
+          $colorSpace = $elements['ColorSpace']->getContent();
+        }
+        else {
+          // This is when it's a pdfObject.
+          $colorSpace = $elements['ColorSpace']->getHeader()
+            ->get(0)
+            ->getContent();
+        }
+      }
+      else {
+        $colorSpace = '';
+      }
+
+      $dataFile = $this->tempDir . '/' . $this->uuid->generate();
+      $this->fileSystem->saveData($image->getContent(), $dataFile, FileExists::Replace);
+
+      $image = new Image();
+      $image->setWidth($width);
+      $image->setHeight($height);
+      $image->setBitsPerComponent($bitsPerComponent);
+      $image->setColorSpace($colorSpace);
+      $image->setFilter($filter);
+      $image->setXObjectDataFile($dataFile);
+      $exportPage->addImage($image);
+    }
+  }
+
+  /**
+   * Add links.
+   *
+   * This looks for link annotations in the PDF page content, and works them
+   * into the content of the page.
+   */
+  protected function addLinks(PdfPage $pdfPage, Page $exportPage): void {
+    foreach ($this->getAnnotations($pdfPage) as $annotation) {
+
+      $subType = $annotation->get('Subtype')->getContent();
+      if ($subType !== 'Link') {
+        continue;
+      }
+      $action = $annotation->get('A');
+
+      $rect = [];
+      foreach ($annotation->get('Rect')->getRawContent() as $coordinate) {
+        $rect[] = $coordinate->getContent();
+      }
+
+      $uri = (string) $action->get('URI');
+
+      if (empty($uri)) {
+        continue;
+      }
+
+      // rect = lower left x, lower left y, upper right x, upper right y.
+      [$llx, $lly, $urx, $ury] = $rect;
+
+      // Look for text near the midpoint of the box.
+      $textX = ($llx + $urx) / 2;
+      $textY = ($lly + $ury) / 2;
+
+      // Set the area to search to the dimensions of the box, plus a bit extra.
+      $extra = 1.9;
+      $xError = ($urx - $llx) / $extra;
+      $yError = ($ury - $lly) / $extra;
+
+      // Can we find the text this annotation is around?
+      $texts = $pdfPage->getTextXY($textX, $textY, $xError, $yError);
+
+      // There may be multiple text items.
+      // We could do better than this and look for the text all combined as one
+      // string, but this is easy for the moment.
+      foreach ($texts as $text) {
+        // Index 0 is position data. 1 is the text.
+        $linktext = $text[1];
+        if ($linktext) {
+          $this->replaceContent($exportPage, $linktext, "<a href=\"{$uri}\">{$linktext}</a>");
+        }
+      }
+    }
+  }
+
+  /**
+   * Get the annotations from a page.
+   */
+  protected function getAnnotations(PdfPage $pdfPage) {
+    $rtn = [];
+    $annotations = $pdfPage->get('Annots');
+    if (!$annotations instanceof ElementMissing) {
+      foreach ($annotations->getRawContent() as $element) {
+        if ($element instanceof ElementXRef) {
+          $rtn[] = $element->getObject();
+        }
+      }
+    }
+    return $rtn;
+  }
+
+  /**
+   * Replace content in the page.
+   *
+   * This could be a method on the page?
+   */
+  protected function replaceContent(Page $exportPage, $search, $replace) {
+    $text = $exportPage->getContent();
+    $text = str_replace($search, $replace, $text);
+    $exportPage->setContent($text);
+  }
 }

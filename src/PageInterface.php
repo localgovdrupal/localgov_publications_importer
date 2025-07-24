@@ -49,4 +49,5 @@ interface PageInterface {
    *   The images that have been added to this page.
    */
   public function getImages(): array;
+
 }

@@ -98,33 +98,6 @@ class Publication extends SavePluginBase {
         ]);
         $paragraph->save();
         $paragraphs[] = $paragraph;
-
-        // Reset the crop on the image to freestyle.
-        // The default landscape format cuts off the
-        // top and bottom of tall images.
-        $file = File::load($image->getFileId());
-
-        // There's no crop saved at this point, so we don't need to update one.
-        // Just save a new one.
-        // This saves a crop in the right place, but it doesn't get used?
-        $crops = $this->entityTypeManager
-          ->getStorage('crop')
-          ->create([
-
-                         'type' => 'freestyle',
-                     'langcode' => 'en',
-                    'entity_id' =>  $file->id(),
-                  'entity_type' => 'file',
-                          'uri' => $file->getFileUri(),
-//                       'height': NULL
-//                        width: NULL
-//                            x: 400
-//                            y: 600
-//             default_langcode: 1
-//revision_translation_affected: 1
-          ])->save();
-
-
       }
       $pageContent = $publicationPage->get('localgov_publication_content');
       foreach ($paragraphs as $paragraph) {

@@ -8,7 +8,6 @@ use Drupal\file\FileInterface;
 use Drupal\localgov_publications_importer\Attribute\Transform;
 use Drupal\localgov_publications_importer\PageInterface;
 use Drupal\localgov_publications_importer\Plugin\TransformInterface;
-use GdImage;
 
 /**
  * Transform operation to change xObject raw data into image files.
@@ -37,13 +36,12 @@ class Images extends TransformPluginBase implements TransformInterface {
 
       $filter = $image->getFilter();
 
-      $dataFileName = $image->getXObjectDataFile();
+      $dataFileName = $image->getxObjectDataFile();
 
-      $fileEntity = null;
+      $fileEntity = NULL;
 
       if ($filter === 'DCTDecode') {
         // DCTDecode objects are just JPEGs. We can write them to a file and use them.
-
         $imageFileName = str_replace('temporary://', 'public://', $dataFileName) . '.jpg';
         $fileEntity = $fileRepository->writeData(file_get_contents($dataFileName), $imageFileName);
         $fileSystem->delete($dataFileName);
@@ -61,8 +59,8 @@ class Images extends TransformPluginBase implements TransformInterface {
           // FlateDecode objects have already been decompressed for us, but
           // aren't images yet. We need to rebuild the pixel data in the source
           // file into an image and save it.
-          $imageFile = $this->createImageFromXObjectData(file_get_contents($image->getXObjectDataFile()), $width, $height, $bitsPerComponent, $colorSpace);
-          if ($imageFile instanceof GdImage) {
+          $imageFile = $this->createImageFromxObjectData(file_get_contents($image->getxObjectDataFile()), $width, $height, $bitsPerComponent, $colorSpace);
+          if ($imageFile instanceof \GdImage) {
             // Write a png into /tmp. We'll read it and save it properly.
             imagepng($imageFile, $dataFileName . '.png');
             $fileEntity = $fileRepository->writeData(file_get_contents($dataFileName . '.png'), $imageFileName);
@@ -103,9 +101,9 @@ class Images extends TransformPluginBase implements TransformInterface {
    * @return ?\GdImage
    *   A GD image on success, NULL on failure.
    */
-  public function createImageFromXObjectData(string $binary_data, int $width, int $height, int $bits_per_component, string $color_space, ?string $intent = NULL): ?GdImage {
+  public function createImageFromxObjectData(string $binary_data, int $width, int $height, int $bits_per_component, string $color_space, ?string $intent = NULL): ?\GdImage {
 
-    // Validate input parameters according to ISO 32000-1
+    // Validate input parameters according to ISO 32000-1.
     if ($width <= 0 || $height <= 0) {
       return NULL;
     }
@@ -114,7 +112,7 @@ class Images extends TransformPluginBase implements TransformInterface {
       return NULL;
     }
 
-    // Create a new image
+    // Create a new image.
     $image = imagecreatetruecolor($width, $height);
     if (!$image) {
       return NULL;
@@ -140,7 +138,6 @@ class Images extends TransformPluginBase implements TransformInterface {
         // ICCBased shows up a lot in the Southwark PDFs...
         // See https://blog.idrsolutions.com/what-are-iccbased-colorspaces-in-pdf-files/.
         return $this->processRgbImage($image, $binary_data, $width, $height, $bits_per_component);
-      // return $this->processGrayscaleImage($image, $binary_data, $width, $height, $bits_per_component);
     }
   }
 
@@ -161,9 +158,10 @@ class Images extends TransformPluginBase implements TransformInterface {
    * @return ?\GdImage
    *   The processed image or NULL on failure.
    */
-  private function processRgbImage(GdImage $image, string $binary_data, int $width, int $height, int $bits_per_component): ?GdImage {
+  private function processRgbImage(\GdImage $image, string $binary_data, int $width, int $height, int $bits_per_component): ?\GdImage {
     $bytes_per_component = $bits_per_component / 8;
-    $components_per_pixel = 3; // RGB has 3 components
+    // RGB has 3 components.
+    $components_per_pixel = 3;
     $bytes_per_pixel = $bytes_per_component * $components_per_pixel;
 
     $data_length = strlen($binary_data);
@@ -180,20 +178,21 @@ class Images extends TransformPluginBase implements TransformInterface {
           return $image;
         }
 
-        // Extract RGB values based on bits per component
+        // Extract RGB values based on bits per component.
         if ($bits_per_component == 8) {
           $r = ord($binary_data[$offset]);
           $g = ord($binary_data[$offset + 1]);
           $b = ord($binary_data[$offset + 2]);
-        } else {
-          // Scale values to 8-bit range
+        }
+        else {
+          // Scale values to 8-bit range.
           $max_value = (1 << $bits_per_component) - 1;
           $r = $this->extractComponentValue($binary_data, $offset, $bits_per_component) * 255 / $max_value;
           $g = $this->extractComponentValue($binary_data, $offset + $bytes_per_component, $bits_per_component) * 255 / $max_value;
           $b = $this->extractComponentValue($binary_data, $offset + 2 * $bytes_per_component, $bits_per_component) * 255 / $max_value;
         }
 
-        $color = imagecolorallocate($image, (int)$r, (int)$g, (int)$b);
+        $color = imagecolorallocate($image, (int) $r, (int) $g, (int) $b);
         imagesetpixel($image, $x, $y, $color);
 
         $offset += $bytes_per_pixel;
@@ -220,7 +219,7 @@ class Images extends TransformPluginBase implements TransformInterface {
    * @return ?\GdImage
    *   The processed image or NULL on failure.
    */
-  private function processGrayscaleImage(GdImage $image, string $binary_data, int $width, int $height, int $bits_per_component): ?GdImage {
+  private function processGrayscaleImage(\GdImage $image, string $binary_data, int $width, int $height, int $bits_per_component): ?\GdImage {
     $bytes_per_component = $bits_per_component / 8;
     $data_length = strlen($binary_data);
     $expected_length = $width * $height * $bytes_per_component;
@@ -236,16 +235,17 @@ class Images extends TransformPluginBase implements TransformInterface {
           return $image;
         }
 
-        // Extract grayscale value
+        // Extract grayscale value.
         if ($bits_per_component == 8) {
           $gray = ord($binary_data[$offset]);
-        } else {
-          // Scale value to 8-bit range
+        }
+        else {
+          // Scale value to 8-bit range.
           $max_value = (1 << $bits_per_component) - 1;
           $gray = $this->extractComponentValue($binary_data, $offset, $bits_per_component) * 255 / $max_value;
         }
 
-        $color = imagecolorallocate($image, (int)$gray, (int)$gray, (int)$gray);
+        $color = imagecolorallocate($image, (int) $gray, (int) $gray, (int) $gray);
         imagesetpixel($image, $x, $y, $color);
 
         $offset += $bytes_per_component;
@@ -272,9 +272,9 @@ class Images extends TransformPluginBase implements TransformInterface {
    * @return ?\GdImage
    *   The processed image or NULL on failure.
    */
-  private function processCmykImage(GdImage $image, string $binary_data, int $width, int $height, int $bits_per_component): ?GdImage {
+  private function processCmykImage(\GdImage $image, string $binary_data, int $width, int $height, int $bits_per_component): ?\GdImage {
     $bytes_per_component = $bits_per_component / 8;
-    // CMYK has 4 components
+    // CMYK has 4 components.
     $components_per_pixel = 4;
     $bytes_per_pixel = $bytes_per_component * $components_per_pixel;
 
@@ -292,14 +292,15 @@ class Images extends TransformPluginBase implements TransformInterface {
           return $image;
         }
 
-        // Extract CMYK values and convert to RGB
+        // Extract CMYK values and convert to RGB.
         if ($bits_per_component == 8) {
           $c = ord($binary_data[$offset]) / 255;
           $m = ord($binary_data[$offset + 1]) / 255;
           $y_cmyk = ord($binary_data[$offset + 2]) / 255;
           $k = ord($binary_data[$offset + 3]) / 255;
-        } else {
-          // Scale values to 0-1 range
+        }
+        else {
+          // Scale values to 0-1 range.
           $max_value = (1 << $bits_per_component) - 1;
           $c = $this->extractComponentValue($binary_data, $offset, $bits_per_component) / $max_value;
           $m = $this->extractComponentValue($binary_data, $offset + $bytes_per_component, $bits_per_component) / $max_value;
@@ -307,12 +308,12 @@ class Images extends TransformPluginBase implements TransformInterface {
           $k = $this->extractComponentValue($binary_data, $offset + 3 * $bytes_per_component, $bits_per_component) / $max_value;
         }
 
-        // Convert CMYK to RGB
+        // Convert CMYK to RGB.
         $r = (1 - $c) * (1 - $k) * 255;
         $g = (1 - $m) * (1 - $k) * 255;
         $b = (1 - $y_cmyk) * (1 - $k) * 255;
 
-        $color = imagecolorallocate($image, (int)$r, (int)$g, (int)$b);
+        $color = imagecolorallocate($image, (int) $r, (int) $g, (int) $b);
         imagesetpixel($image, $x, $y, $color);
 
         $offset += $bytes_per_pixel;
@@ -338,12 +339,14 @@ class Images extends TransformPluginBase implements TransformInterface {
   private function extractComponentValue(string $data, int $offset, int $bits_per_component): int {
     if ($bits_per_component == 8) {
       return ord($data[$offset] ?? 0);
-    } elseif ($bits_per_component == 16) {
+    }
+    elseif ($bits_per_component == 16) {
       $byte1 = ord($data[$offset] ?? 0);
       $byte2 = ord($data[$offset + 1] ?? 0);
       return ($byte1 << 8) | $byte2;
-    } else {
-      // For 1, 2, 4 bits per component, we need bit-level extraction
+    }
+    else {
+      // For 1, 2, 4 bits per component, we need bit-level extraction.
       $byte_offset = intval($offset / 8);
       $bit_offset = $offset % 8;
 

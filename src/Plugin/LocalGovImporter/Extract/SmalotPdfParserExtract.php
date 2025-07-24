@@ -17,10 +17,9 @@ use Smalot\PdfParser\Document;
 use Smalot\PdfParser\Element\ElementMissing;
 use Smalot\PdfParser\Element\ElementName;
 use Smalot\PdfParser\Element\ElementXRef;
-use Smalot\PdfParser\Parser as PdfParser;
-use Smalot\PdfParser\PDFObject;
-use Smalot\PdfParser\XObject\Image as XObjectImage;
 use Smalot\PdfParser\Page as PdfPage;
+use Smalot\PdfParser\Parser as PdfParser;
+use Smalot\PdfParser\XObject\Image as XObjectImage;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -35,11 +34,15 @@ class SmalotPdfParserExtract extends ExtractPluginBase implements ContainerFacto
 
   /**
    * An array of MD5 hashes that we'll use to not import duplicated images.
+   *
+   * @var string[]
    */
   protected array $importedImages = [];
 
   /**
    * The directory where we'll save temporary files.
+   *
+   * @var string
    */
   protected string $tempDir = 'temporary://localgov_publications_importer';
 
@@ -183,7 +186,7 @@ class SmalotPdfParserExtract extends ExtractPluginBase implements ContainerFacto
       $image->setBitsPerComponent($bitsPerComponent);
       $image->setColorSpace($colorSpace);
       $image->setFilter($filter);
-      $image->setXObjectDataFile($dataFile);
+      $image->setxObjectDataFile($dataFile);
       $exportPage->addImage($image);
     }
   }
@@ -214,7 +217,7 @@ class SmalotPdfParserExtract extends ExtractPluginBase implements ContainerFacto
         continue;
       }
 
-      // rect = lower left x, lower left y, upper right x, upper right y.
+      // Rect = lower left x, lower left y, upper right x, upper right y.
       [$llx, $lly, $urx, $ury] = $rect;
 
       // Look for text near the midpoint of the box.
@@ -268,4 +271,5 @@ class SmalotPdfParserExtract extends ExtractPluginBase implements ContainerFacto
     $text = str_replace($search, $replace, $text);
     $exportPage->setContent($text);
   }
+
 }

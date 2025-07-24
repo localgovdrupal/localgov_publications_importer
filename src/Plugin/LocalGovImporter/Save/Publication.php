@@ -3,7 +3,6 @@
 namespace Drupal\localgov_publications_importer\Plugin\LocalGovImporter\Save;
 
 use Drupal\Core\StringTranslation\TranslatableMarkup;
-use Drupal\file\Entity\File;
 use Drupal\localgov_publications_importer\Attribute\Save;
 use Drupal\localgov_publications_importer\ImportInterface;
 use Drupal\media\Entity\Media;

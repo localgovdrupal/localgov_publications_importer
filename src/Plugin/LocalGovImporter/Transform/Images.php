@@ -41,7 +41,7 @@ class Images extends TransformPluginBase implements TransformInterface {
       $fileEntity = NULL;
 
       if ($filter === 'DCTDecode') {
-        // DCTDecode objects are just JPEGs. We can write them to a file and use them.
+        // DCTDecode objects are JPEGs. Write them to a file and use them.
         $imageFileName = str_replace('temporary://', 'public://', $dataFileName) . '.jpg';
         $fileEntity = $fileRepository->writeData(file_get_contents($dataFileName), $imageFileName);
         $fileSystem->delete($dataFileName);
@@ -108,7 +108,7 @@ class Images extends TransformPluginBase implements TransformInterface {
       return NULL;
     }
 
-    if (!in_array($bits_per_component, [1, 2, 4, 8, 16])) {
+    if (!in_array($bits_per_component, [1, 2, 4, 8, 16], TRUE)) {
       return NULL;
     }
 

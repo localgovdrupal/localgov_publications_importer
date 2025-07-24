@@ -248,7 +248,7 @@ class SmalotPdfParserExtract extends ExtractPluginBase implements ContainerFacto
   /**
    * Get the annotations from a page.
    */
-  protected function getAnnotations(PdfPage $pdfPage) {
+  protected function getAnnotations(PdfPage $pdfPage): array {
     $rtn = [];
     $annotations = $pdfPage->get('Annots');
     if (!$annotations instanceof ElementMissing) {
@@ -266,7 +266,7 @@ class SmalotPdfParserExtract extends ExtractPluginBase implements ContainerFacto
    *
    * This could be a method on the page?
    */
-  protected function replaceContent(Page $exportPage, $search, $replace) {
+  protected function replaceContent(Page $exportPage, $search, $replace): void {
     $text = $exportPage->getContent();
     $text = str_replace($search, $replace, $text);
     $exportPage->setContent($text);

@@ -14,9 +14,10 @@ use Drupal\localgov_publications_importer\ImportInterface;
 use Drupal\localgov_publications_importer\Page;
 use Smalot\PdfParser\Config as PdfParserConfig;
 use Smalot\PdfParser\Document;
-use Smalot\PdfParser\Element\ElementMissing;
+use Smalot\PdfParser\Element\ElementArray;
 use Smalot\PdfParser\Element\ElementName;
 use Smalot\PdfParser\Element\ElementXRef;
+use Smalot\PdfParser\PDFObject;
 use Smalot\PdfParser\Page as PdfPage;
 use Smalot\PdfParser\Parser as PdfParser;
 use Smalot\PdfParser\XObject\Image as XObjectImage;
@@ -251,11 +252,17 @@ class SmalotPdfParserExtract extends ExtractPluginBase implements ContainerFacto
   protected function getAnnotations(PdfPage $pdfPage): array {
     $rtn = [];
     $annotations = $pdfPage->get('Annots');
-    if (!$annotations instanceof ElementMissing) {
+    if ($annotations instanceof ElementArray) {
       foreach ($annotations->getRawContent() as $element) {
         if ($element instanceof ElementXRef) {
           $rtn[] = $element->getObject();
         }
+      }
+    }
+    if ($annotations instanceof PDFObject) {
+      $elements = $annotations->getHeader()->getElements();
+      foreach ($elements as $element) {
+        $rtn[] = $element;
       }
     }
     return $rtn;

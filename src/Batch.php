@@ -4,7 +4,6 @@ namespace Drupal\localgov_publications_importer;
 
 use Drupal\localgov_publications_importer\Exception\RetryableTransformFailure;
 use Drupal\localgov_publications_importer\Service\Importer;
-use Drupal\node\Entity\Node;
 use Drupal\node\NodeInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 

@@ -272,7 +272,7 @@ class SmalotPdfParserExtract extends ExtractPluginBase implements ContainerFacto
         // Index 0 is position data. 1 is the text.
         return $text[1];
       }, $texts);
-      
+
       $linkText = implode(' ', $textSearch);
       if ($linkText) {
         // @todo Check the return value here and do individual replacements.
@@ -333,4 +333,5 @@ class SmalotPdfParserExtract extends ExtractPluginBase implements ContainerFacto
 
     return $count > 0;
   }
+
 }

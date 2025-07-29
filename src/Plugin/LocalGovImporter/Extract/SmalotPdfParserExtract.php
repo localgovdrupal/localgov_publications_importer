@@ -119,7 +119,7 @@ class SmalotPdfParserExtract extends ExtractPluginBase implements ContainerFacto
   /**
    * Set the title of an import from the parsed PDF.
    */
-  protected function setTitle(Import $import, Document $pdf) {
+  protected function setTitle(Import $import, Document $pdf): void {
     $details = $pdf->getDetails();
 
     $title = NULL;

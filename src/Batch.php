@@ -4,6 +4,8 @@ namespace Drupal\localgov_publications_importer;
 
 use Drupal\localgov_publications_importer\Exception\RetryableTransformFailure;
 use Drupal\localgov_publications_importer\Service\Importer;
+use Drupal\node\Entity\Node;
+use Drupal\node\NodeInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 
 /**
@@ -48,7 +50,14 @@ class Batch {
       foreach ($context['sandbox']['done'] as $steps) {
         $completedSteps += count($steps);
       }
-      $context['finished'] = $completedSteps / $totalSteps;
+      if ($totalSteps === 0) {
+        // If there's no steps, because there's no transform plugins, or there's
+        // no pages to run them on, we're done.
+        $context['finished'] = 1;
+      }
+      else {
+        $context['finished'] = $completedSteps / $totalSteps;
+      }
     }
 
     // Do this one step at a time by limiting the loop using the sandbox.
@@ -88,7 +97,9 @@ class Batch {
   public static function save(string $importPipelineId, array &$context): void {
     // We might not be importing to nodes, eventually... Generalise this.
     $node = self::importer($importPipelineId)->save($context['results']['import']);
-    $context['results']['redirect'] = '/node/' . $node->id();
+    if ($node instanceof NodeInterface) {
+      $context['results']['redirect'] = '/node/' . $node->id();
+    }
   }
 
   /**
@@ -97,8 +108,13 @@ class Batch {
   public static function finished(bool $success, array $results, array $operations, string $elapsed): ?RedirectResponse {
 
     if ($success) {
-      \Drupal::messenger()->addMessage("Import complete. Here is your publication.");
-      return new RedirectResponse($results['redirect']);
+      if (isset($results['redirect'])) {
+        \Drupal::messenger()->addMessage("Import complete. Here is your publication.");
+        return new RedirectResponse($results['redirect']);
+      }
+      else {
+        \Drupal::messenger()->addWarning("Nothing was imported. Please check the pipeline configuration.");
+      }
     }
     else {
       // @todo Handle failure.

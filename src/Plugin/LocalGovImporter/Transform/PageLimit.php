@@ -76,6 +76,7 @@ class PageLimit extends TransformPluginBase {
   public function getConfigurationForm(): array {
     return [
       'limit' => [
+        '#title' => 'Limit',
         '#type' => 'textfield',
         '#attributes' => [
           'type' => 'number',
@@ -84,6 +85,7 @@ class PageLimit extends TransformPluginBase {
         '#default_value' => $this->limit,
       ],
       'offset' => [
+        '#title' => 'Offset',
         '#type' => 'textfield',
         '#attributes' => [
           'type' => 'number',

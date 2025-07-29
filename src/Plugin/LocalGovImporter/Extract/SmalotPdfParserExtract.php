@@ -5,6 +5,7 @@ namespace Drupal\localgov_publications_importer\Plugin\LocalGovImporter\Extract;
 use Drupal\Component\Uuid\UuidInterface;
 use Drupal\Core\File\FileExists;
 use Drupal\Core\File\FileSystemInterface;
+use Drupal\Core\Logger\LoggerChannelTrait;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\localgov_publications_importer\Attribute\Extract;
@@ -32,6 +33,8 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
   description: new TranslatableMarkup('Extract operation that uses Smalot/pdfparser')
 )]
 class SmalotPdfParserExtract extends ExtractPluginBase implements ContainerFactoryPluginInterface {
+
+  use LoggerChannelTrait;
 
   /**
    * An array of MD5 hashes that we'll use to not import duplicated images.
@@ -81,15 +84,7 @@ class SmalotPdfParserExtract extends ExtractPluginBase implements ContainerFacto
     $pdf = $this->parseFile();
     $import = new Import($this->pathToFile);
 
-    $details = $pdf->getDetails();
-    if (isset($details['Title']) && $details['Title'] !== '') {
-      $import->setTitle($details['Title']);
-    }
-    else {
-      // Fall back to the filename if we can't find a title in the PDF.
-      // This isn't ideal, but we need to have a title to save a node.
-      $import->setTitle(basename($this->pathToFile));
-    }
+    $this->setTitle($import, $pdf);
 
     // Get the pages and sort them. They don't come back in order by default.
     $pdfPages = $pdf->getPages();
@@ -119,6 +114,45 @@ class SmalotPdfParserExtract extends ExtractPluginBase implements ContainerFacto
 
     }
     return $import;
+  }
+
+  /**
+   * Set the title of an import from the parsed PDF.
+   */
+  protected function setTitle(Import $import, Document $pdf) {
+    $details = $pdf->getDetails();
+
+    $title = NULL;
+
+    if (isset($details['Title'])) {
+      $title = $details['Title'];
+    }
+    else {
+      $this->getLogger('localgov_publications_importer')->debug("Title not found in details.");
+    }
+
+    if (is_string($title)) {
+      if ($title === '') {
+        $this->getLogger('localgov_publications_importer')->debug("Title empty in details.");
+      }
+    }
+    else {
+      // Ignore null here, so we don't log duplicate messages.
+      if ($title !== NULL) {
+        $this->getLogger('localgov_publications_importer')->debug("Title not a string in details. " . gettype($title) . " found.");
+      }
+      // Se this to null so we don't try to use it.
+      $title = NULL;
+    }
+
+    if ($title !== NULL) {
+      $import->setTitle($details['Title']);
+      return;
+    }
+
+    // Fall back to the filename if we can't find a title in the PDF.
+    // This isn't ideal, but we need to have a title to save a node.
+    $import->setTitle(basename($this->pathToFile));
   }
 
   /**
@@ -233,15 +267,20 @@ class SmalotPdfParserExtract extends ExtractPluginBase implements ContainerFacto
       // Can we find the text this annotation is around?
       $texts = $pdfPage->getTextXY($textX, $textY, $xError, $yError);
 
-      // There may be multiple text items.
-      // We could do better than this and look for the text all combined as one
-      // string, but this is easy for the moment.
-      foreach ($texts as $text) {
+      // There may be multiple text items found. Combine them into one.
+      $textSearch = array_map(function ($text) {
         // Index 0 is position data. 1 is the text.
-        $linktext = $text[1];
-        if ($linktext) {
-          $this->replaceContent($exportPage, $linktext, "<a href=\"{$uri}\">{$linktext}</a>");
-        }
+        return $text[1];
+      }, $texts);
+      
+      $linkText = implode(' ', $textSearch);
+      if ($linkText) {
+        // @todo Check the return value here and do individual replacements.
+        // (if we can't match the entire string). This will need to be careful
+        // about strings like "-" showing up. Check for a minimum length?
+        // Ideally, we should do this earlier when we're assembling the text
+        // array, then we still have the mapping of content to postition.
+        $this->replaceContent($exportPage, $linkText, "<a href=\"{$uri}\">{$linkText}</a>");
       }
     }
   }
@@ -250,21 +289,32 @@ class SmalotPdfParserExtract extends ExtractPluginBase implements ContainerFacto
    * Get the annotations from a page.
    */
   protected function getAnnotations(PdfPage $pdfPage): array {
+
     $rtn = [];
-    $annotations = $pdfPage->get('Annots');
-    if ($annotations instanceof ElementArray) {
-      foreach ($annotations->getRawContent() as $element) {
-        if ($element instanceof ElementXRef) {
-          $rtn[] = $element->getObject();
-        }
+    $annotations = [];
+
+    $annotationCollection = $pdfPage->get('Annots');
+    if ($annotationCollection instanceof ElementArray) {
+      foreach ($annotationCollection->getRawContent() as $element) {
+        $annotations[] = $element;
       }
     }
-    if ($annotations instanceof PDFObject) {
-      $elements = $annotations->getHeader()->getElements();
+    if ($annotationCollection instanceof PDFObject) {
+      $elements = $annotationCollection->getHeader()->getElements();
       foreach ($elements as $element) {
-        $rtn[] = $element;
+        $annotations[] = $element;
       }
     }
+
+    foreach ($annotations as $annotation) {
+      if ($annotation instanceof PDFObject) {
+        $rtn[] = $annotation;
+      }
+      elseif ($annotation instanceof ElementXRef) {
+        $rtn[] = $annotation->getObject();
+      }
+    }
+
     return $rtn;
   }
 
@@ -272,11 +322,15 @@ class SmalotPdfParserExtract extends ExtractPluginBase implements ContainerFacto
    * Replace content in the page.
    *
    * This could be a method on the page?
+   *
+   * @return bool
+   *   If at least one replacement was made.
    */
-  protected function replaceContent(Page $exportPage, $search, $replace): void {
+  protected function replaceContent(Page $exportPage, $search, $replace): bool {
     $text = $exportPage->getContent();
-    $text = str_replace($search, $replace, $text);
+    $text = str_replace($search, $replace, $text, $count);
     $exportPage->setContent($text);
-  }
 
+    return $count > 0;
+  }
 }

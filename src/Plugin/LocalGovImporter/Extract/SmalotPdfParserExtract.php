@@ -81,8 +81,9 @@ class SmalotPdfParserExtract extends ExtractPluginBase implements ContainerFacto
    */
   public function getImport(): ?ImportInterface {
 
-    $pdf = $this->parseFile();
     $import = new Import($this->pathToFile);
+
+    $pdf = $this->parseFile();
 
     $this->setTitle($import, $pdf);
 
@@ -96,8 +97,9 @@ class SmalotPdfParserExtract extends ExtractPluginBase implements ContainerFacto
 
     foreach ($pdfPages as $pdfPage) {
 
+      $content = $this->cleanText($pdfPage->getText());
+
       // Don't add empty pages.
-      $content = trim($pdfPage->getText());
       if ($content === '') {
         continue;
       }
@@ -111,15 +113,27 @@ class SmalotPdfParserExtract extends ExtractPluginBase implements ContainerFacto
       $this->addLinks($pdfPage, $page);
 
       $import->addPage($page);
-
     }
     return $import;
   }
 
   /**
+   * Cleans the text in preparation for using it.
+   */
+  protected function cleanText(string $text): string {
+
+    // This char is present in at least one PDF in the test suite.
+    // It stops the text it's in being saved to the DB.
+    $text = str_replace("\xD7", ' ', $text);
+
+    // Remove leading/trailing whitespace.
+    return trim($text);
+  }
+
+  /**
    * Set the title of an import from the parsed PDF.
    */
-  protected function setTitle(Import $import, Document $pdf): void {
+  protected function setTitle(Import $import, Document $pdf) {
     $details = $pdf->getDetails();
 
     $title = NULL;
@@ -196,20 +210,28 @@ class SmalotPdfParserExtract extends ExtractPluginBase implements ContainerFacto
       $bitsPerComponent = (int) $image->getHeader()->get('BitsPerComponent')->getContent();
 
       // We need to get the image color space like this for some reason.
+      $colorSpace = '';
       $elements = $image->getHeader()->getElements();
       if (isset($elements['ColorSpace'])) {
         if ($elements['ColorSpace'] instanceof ElementName) {
           $colorSpace = $elements['ColorSpace']->getContent();
         }
-        else {
-          // This is when it's a pdfObject.
+        else if ($elements['ColorSpace'] instanceof PDFObject) {
           $colorSpace = $elements['ColorSpace']->getHeader()
             ->get(0)
             ->getContent();
         }
-      }
-      else {
-        $colorSpace = '';
+        else if ($elements['ColorSpace'] instanceof ElementArray) {
+          // Handle when $elements['ColorSpace'] is an ElementArray,
+          // like in Where-your-money-goes-2025-26.pdf
+          $details = $elements['ColorSpace']->getDetails();
+          // There's other data in here too. EG:
+          //   0 => 'Indexed'
+          //   1 => ['ICCBased']
+          //   2 => 255
+          //   3 => ['Filter' => 'FlateDecode', 'Length' => 708]
+          $colorSpace = $details[0];
+        }
       }
 
       $dataFile = $this->tempDir . '/' . $this->uuid->generate();
@@ -233,20 +255,26 @@ class SmalotPdfParserExtract extends ExtractPluginBase implements ContainerFacto
    * into the content of the page.
    */
   protected function addLinks(PdfPage $pdfPage, Page $exportPage): void {
+    $search = [];
+    $replace = [];
     foreach ($this->getAnnotations($pdfPage) as $annotation) {
 
       $subType = $annotation->get('Subtype')->getContent();
       if ($subType !== 'Link') {
         continue;
       }
-      $action = $annotation->get('A');
 
       $rect = [];
       foreach ($annotation->get('Rect')->getRawContent() as $coordinate) {
         $rect[] = $coordinate->getContent();
       }
 
-      $uri = (string) $action->get('URI');
+      $uri = '';
+
+      $action = $annotation->get('A');
+      if ($action instanceof PDFObject) {
+        $uri = (string) $action->get('URI');
+      }
 
       if (empty($uri)) {
         continue;
@@ -280,8 +308,13 @@ class SmalotPdfParserExtract extends ExtractPluginBase implements ContainerFacto
         // about strings like "-" showing up. Check for a minimum length?
         // Ideally, we should do this earlier when we're assembling the text
         // array, then we still have the mapping of content to postition.
-        $this->replaceContent($exportPage, $linkText, "<a href=\"{$uri}\">{$linkText}</a>");
+        $search[] = $linkText;
+        $replace[] = "<a href=\"{$uri}\">{$linkText}</a>";
       }
+    }
+
+    if (count($search) > 0) {
+      $this->replaceContent($exportPage, $search, $replace);
     }
   }
 
@@ -326,12 +359,11 @@ class SmalotPdfParserExtract extends ExtractPluginBase implements ContainerFacto
    * @return bool
    *   If at least one replacement was made.
    */
-  protected function replaceContent(Page $exportPage, $search, $replace): bool {
+  protected function replaceContent(Page $exportPage, array $search, array $replace): bool {
     $text = $exportPage->getContent();
     $text = str_replace($search, $replace, $text, $count);
     $exportPage->setContent($text);
 
     return $count > 0;
   }
-
 }

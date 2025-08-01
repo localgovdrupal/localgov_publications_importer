@@ -14,6 +14,9 @@
     "require": {
         "smalot/pdfparser": "^2.7.0"
     },
+    "require-dev": {
+        "localgovdrupal/localgov_publications_importer_test_data": "1.x-dev"
+    },
     "suggest": {
         "drupal/ai": "Format the imported PDF using an AI LLM (required by the submodule localgov_publications_importer_ai)"
     }

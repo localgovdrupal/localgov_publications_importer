@@ -133,7 +133,7 @@ class SmalotPdfParserExtract extends ExtractPluginBase implements ContainerFacto
   /**
    * Set the title of an import from the parsed PDF.
    */
-  protected function setTitle(Import $import, Document $pdf) {
+  protected function setTitle(Import $import, Document $pdf): void {
     $details = $pdf->getDetails();
 
     $title = NULL;
@@ -216,20 +216,20 @@ class SmalotPdfParserExtract extends ExtractPluginBase implements ContainerFacto
         if ($elements['ColorSpace'] instanceof ElementName) {
           $colorSpace = $elements['ColorSpace']->getContent();
         }
-        else if ($elements['ColorSpace'] instanceof PDFObject) {
+        elseif ($elements['ColorSpace'] instanceof PDFObject) {
           $colorSpace = $elements['ColorSpace']->getHeader()
             ->get(0)
             ->getContent();
         }
-        else if ($elements['ColorSpace'] instanceof ElementArray) {
+        elseif ($elements['ColorSpace'] instanceof ElementArray) {
           // Handle when $elements['ColorSpace'] is an ElementArray,
-          // like in Where-your-money-goes-2025-26.pdf
+          // like in Where-your-money-goes-2025-26.pdf.
           $details = $elements['ColorSpace']->getDetails();
           // There's other data in here too. EG:
-          //   0 => 'Indexed'
-          //   1 => ['ICCBased']
-          //   2 => 255
-          //   3 => ['Filter' => 'FlateDecode', 'Length' => 708]
+          // 0 => 'Indexed'
+          // 1 => ['ICCBased']
+          // 2 => 255
+          // 3 => ['Filter' => 'FlateDecode', 'Length' => 708].
           $colorSpace = $details[0];
         }
       }
@@ -366,4 +366,5 @@ class SmalotPdfParserExtract extends ExtractPluginBase implements ContainerFacto
 
     return $count > 0;
   }
+
 }

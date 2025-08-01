@@ -51,7 +51,7 @@ class ExtractAndSaveTest extends BrowserTestBase {
   /**
    * Get the directory we're reading PDF files from.
    */
-  protected function dataDir() {
+  protected function dataDir(): string {
     // We keep test data in a separate module, installed as a dev dependency.
     // This is because it's quite big, and we don't want to install it in
     // everyone's sites.
@@ -61,7 +61,7 @@ class ExtractAndSaveTest extends BrowserTestBase {
   /**
    * Data provider for PDF file test data.
    */
-  public function fileProvider(): array {
+  public static function fileProvider(): array {
     $rtn = [];
     foreach (scandir($this->dataDir()) as $dirname) {
       if (str_starts_with($dirname, '.')) {

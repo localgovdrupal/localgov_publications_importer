@@ -83,7 +83,7 @@ class Importer {
   /**
    * Run the save part of the process.
    */
-  public function save($import): EntityInterface {
+  public function save($import): ?EntityInterface {
     return $this->saveOperation()->import($import);
   }
 

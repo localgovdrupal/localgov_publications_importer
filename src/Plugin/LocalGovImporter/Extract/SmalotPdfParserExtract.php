@@ -5,6 +5,7 @@ namespace Drupal\localgov_publications_importer\Plugin\LocalGovImporter\Extract;
 use Drupal\Component\Uuid\UuidInterface;
 use Drupal\Core\File\FileExists;
 use Drupal\Core\File\FileSystemInterface;
+use Drupal\Core\Logger\LoggerChannelTrait;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\localgov_publications_importer\Attribute\Extract;
@@ -32,6 +33,8 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
   description: new TranslatableMarkup('Extract operation that uses Smalot/pdfparser')
 )]
 class SmalotPdfParserExtract extends ExtractPluginBase implements ContainerFactoryPluginInterface {
+
+  use LoggerChannelTrait;
 
   /**
    * An array of MD5 hashes that we'll use to not import duplicated images.
@@ -78,18 +81,11 @@ class SmalotPdfParserExtract extends ExtractPluginBase implements ContainerFacto
    */
   public function getImport(): ?ImportInterface {
 
-    $pdf = $this->parseFile();
     $import = new Import($this->pathToFile);
 
-    $details = $pdf->getDetails();
-    if (isset($details['Title']) && $details['Title'] !== '') {
-      $import->setTitle($details['Title']);
-    }
-    else {
-      // Fall back to the filename if we can't find a title in the PDF.
-      // This isn't ideal, but we need to have a title to save a node.
-      $import->setTitle(basename($this->pathToFile));
-    }
+    $pdf = $this->parseFile();
+
+    $this->setTitle($import, $pdf);
 
     // Get the pages and sort them. They don't come back in order by default.
     $pdfPages = $pdf->getPages();
@@ -101,8 +97,9 @@ class SmalotPdfParserExtract extends ExtractPluginBase implements ContainerFacto
 
     foreach ($pdfPages as $pdfPage) {
 
+      $content = $this->cleanText($pdfPage->getText());
+
       // Don't add empty pages.
-      $content = trim($pdfPage->getText());
       if ($content === '') {
         continue;
       }
@@ -116,9 +113,60 @@ class SmalotPdfParserExtract extends ExtractPluginBase implements ContainerFacto
       $this->addLinks($pdfPage, $page);
 
       $import->addPage($page);
-
     }
     return $import;
+  }
+
+  /**
+   * Cleans the text in preparation for using it.
+   */
+  protected function cleanText(string $text): string {
+
+    // This char is present in at least one PDF in the test suite.
+    // It stops the text it's in being saved to the DB.
+    $text = str_replace("\xD7", ' ', $text);
+
+    // Remove leading/trailing whitespace.
+    return trim($text);
+  }
+
+  /**
+   * Set the title of an import from the parsed PDF.
+   */
+  protected function setTitle(Import $import, Document $pdf): void {
+    $details = $pdf->getDetails();
+
+    $title = NULL;
+
+    if (isset($details['Title'])) {
+      $title = $details['Title'];
+    }
+    else {
+      $this->getLogger('localgov_publications_importer')->debug("Title not found in details.");
+    }
+
+    if (is_string($title)) {
+      if ($title === '') {
+        $this->getLogger('localgov_publications_importer')->debug("Title empty in details.");
+      }
+    }
+    else {
+      // Ignore null here, so we don't log duplicate messages.
+      if ($title !== NULL) {
+        $this->getLogger('localgov_publications_importer')->debug("Title not a string in details. " . gettype($title) . " found.");
+      }
+      // Se this to null so we don't try to use it.
+      $title = NULL;
+    }
+
+    if ($title !== NULL) {
+      $import->setTitle($details['Title']);
+      return;
+    }
+
+    // Fall back to the filename if we can't find a title in the PDF.
+    // This isn't ideal, but we need to have a title to save a node.
+    $import->setTitle(basename($this->pathToFile));
   }
 
   /**
@@ -162,20 +210,28 @@ class SmalotPdfParserExtract extends ExtractPluginBase implements ContainerFacto
       $bitsPerComponent = (int) $image->getHeader()->get('BitsPerComponent')->getContent();
 
       // We need to get the image color space like this for some reason.
+      $colorSpace = '';
       $elements = $image->getHeader()->getElements();
       if (isset($elements['ColorSpace'])) {
         if ($elements['ColorSpace'] instanceof ElementName) {
           $colorSpace = $elements['ColorSpace']->getContent();
         }
-        else {
-          // This is when it's a pdfObject.
+        elseif ($elements['ColorSpace'] instanceof PDFObject) {
           $colorSpace = $elements['ColorSpace']->getHeader()
             ->get(0)
             ->getContent();
         }
-      }
-      else {
-        $colorSpace = '';
+        elseif ($elements['ColorSpace'] instanceof ElementArray) {
+          // Handle when $elements['ColorSpace'] is an ElementArray,
+          // like in Where-your-money-goes-2025-26.pdf.
+          $details = $elements['ColorSpace']->getDetails();
+          // There's other data in here too. EG:
+          // 0 => 'Indexed'
+          // 1 => ['ICCBased']
+          // 2 => 255
+          // 3 => ['Filter' => 'FlateDecode', 'Length' => 708].
+          $colorSpace = $details[0];
+        }
       }
 
       $dataFile = $this->tempDir . '/' . $this->uuid->generate();
@@ -199,20 +255,26 @@ class SmalotPdfParserExtract extends ExtractPluginBase implements ContainerFacto
    * into the content of the page.
    */
   protected function addLinks(PdfPage $pdfPage, Page $exportPage): void {
+    $search = [];
+    $replace = [];
     foreach ($this->getAnnotations($pdfPage) as $annotation) {
 
       $subType = $annotation->get('Subtype')->getContent();
       if ($subType !== 'Link') {
         continue;
       }
-      $action = $annotation->get('A');
 
       $rect = [];
       foreach ($annotation->get('Rect')->getRawContent() as $coordinate) {
         $rect[] = $coordinate->getContent();
       }
 
-      $uri = (string) $action->get('URI');
+      $uri = '';
+
+      $action = $annotation->get('A');
+      if ($action instanceof PDFObject) {
+        $uri = (string) $action->get('URI');
+      }
 
       if (empty($uri)) {
         continue;
@@ -233,16 +295,26 @@ class SmalotPdfParserExtract extends ExtractPluginBase implements ContainerFacto
       // Can we find the text this annotation is around?
       $texts = $pdfPage->getTextXY($textX, $textY, $xError, $yError);
 
-      // There may be multiple text items.
-      // We could do better than this and look for the text all combined as one
-      // string, but this is easy for the moment.
-      foreach ($texts as $text) {
+      // There may be multiple text items found. Combine them into one.
+      $textSearch = array_map(function ($text) {
         // Index 0 is position data. 1 is the text.
-        $linktext = $text[1];
-        if ($linktext) {
-          $this->replaceContent($exportPage, $linktext, "<a href=\"{$uri}\">{$linktext}</a>");
-        }
+        return $text[1];
+      }, $texts);
+
+      $linkText = implode(' ', $textSearch);
+      if ($linkText) {
+        // @todo Check the return value here and do individual replacements.
+        // (if we can't match the entire string). This will need to be careful
+        // about strings like "-" showing up. Check for a minimum length?
+        // Ideally, we should do this earlier when we're assembling the text
+        // array, then we still have the mapping of content to postition.
+        $search[] = $linkText;
+        $replace[] = "<a href=\"{$uri}\">{$linkText}</a>";
       }
+    }
+
+    if (count($search) > 0) {
+      $this->replaceContent($exportPage, $search, $replace);
     }
   }
 
@@ -250,21 +322,32 @@ class SmalotPdfParserExtract extends ExtractPluginBase implements ContainerFacto
    * Get the annotations from a page.
    */
   protected function getAnnotations(PdfPage $pdfPage): array {
+
     $rtn = [];
-    $annotations = $pdfPage->get('Annots');
-    if ($annotations instanceof ElementArray) {
-      foreach ($annotations->getRawContent() as $element) {
-        if ($element instanceof ElementXRef) {
-          $rtn[] = $element->getObject();
-        }
+    $annotations = [];
+
+    $annotationCollection = $pdfPage->get('Annots');
+    if ($annotationCollection instanceof ElementArray) {
+      foreach ($annotationCollection->getRawContent() as $element) {
+        $annotations[] = $element;
       }
     }
-    if ($annotations instanceof PDFObject) {
-      $elements = $annotations->getHeader()->getElements();
+    if ($annotationCollection instanceof PDFObject) {
+      $elements = $annotationCollection->getHeader()->getElements();
       foreach ($elements as $element) {
-        $rtn[] = $element;
+        $annotations[] = $element;
       }
     }
+
+    foreach ($annotations as $annotation) {
+      if ($annotation instanceof PDFObject) {
+        $rtn[] = $annotation;
+      }
+      elseif ($annotation instanceof ElementXRef) {
+        $rtn[] = $annotation->getObject();
+      }
+    }
+
     return $rtn;
   }
 
@@ -272,11 +355,16 @@ class SmalotPdfParserExtract extends ExtractPluginBase implements ContainerFacto
    * Replace content in the page.
    *
    * This could be a method on the page?
+   *
+   * @return bool
+   *   If at least one replacement was made.
    */
-  protected function replaceContent(Page $exportPage, $search, $replace): void {
+  protected function replaceContent(Page $exportPage, array $search, array $replace): bool {
     $text = $exportPage->getContent();
-    $text = str_replace($search, $replace, $text);
+    $text = str_replace($search, $replace, $text, $count);
     $exportPage->setContent($text);
+
+    return $count > 0;
   }
 
 }

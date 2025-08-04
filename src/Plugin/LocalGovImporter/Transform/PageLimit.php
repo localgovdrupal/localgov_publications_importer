@@ -24,6 +24,13 @@ class PageLimit extends TransformPluginBase {
   protected int $limit = 100;
 
   /**
+   * The number of pages to skip before importing.
+   *
+   * @var int
+   */
+  protected int $offset = 0;
+
+  /**
    * Constructor.
    */
   public function __construct(array $configuration, $plugin_id, $plugin_definition) {
@@ -31,17 +38,28 @@ class PageLimit extends TransformPluginBase {
     if (isset($configuration['limit'])) {
       $this->limit = $configuration['limit'];
     }
+    if (isset($configuration['offset'])) {
+      $this->offset = $configuration['offset'];
+    }
   }
 
   /**
    * {@inheritDoc}
    */
   public function transform(ImportInterface $import, ?int $page = NULL): void {
+    $pageCount = 0;
     $pageNumbers = array_keys($import->getPages());
     foreach ($pageNumbers as $pageNumber) {
-      if ($pageNumber > $this->limit) {
+      if ($pageNumber < $this->offset) {
+        $import->removePage($pageNumber);
+        continue;
+      }
+
+      if ($pageCount >= $this->limit) {
         $import->removePage($pageNumber);
       }
+
+      $pageCount++;
     }
   }
 
@@ -58,12 +76,22 @@ class PageLimit extends TransformPluginBase {
   public function getConfigurationForm(): array {
     return [
       'limit' => [
+        '#title' => 'Limit',
         '#type' => 'textfield',
         '#attributes' => [
           'type' => 'number',
         ],
         '#description' => new TranslatableMarkup("The number of pages the import will be limited to."),
         '#default_value' => $this->limit,
+      ],
+      'offset' => [
+        '#title' => 'Offset',
+        '#type' => 'textfield',
+        '#attributes' => [
+          'type' => 'number',
+        ],
+        '#description' => new TranslatableMarkup("The number of pages to skip before importing."),
+        '#default_value' => $this->offset,
       ],
     ];
   }

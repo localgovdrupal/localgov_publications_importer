@@ -6,7 +6,7 @@ use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\localgov_publications_importer\Entity\ImportPipeline;
 use Drupal\localgov_publications_importer\ExtractOperationManager;
-use Drupal\localgov_publications_importer\Import;
+use Drupal\localgov_publications_importer\Entity\Import;
 use Drupal\localgov_publications_importer\Plugin\ExtractInterface;
 use Drupal\localgov_publications_importer\Plugin\SaveInterface;
 use Drupal\localgov_publications_importer\SaveOperationManager;
@@ -62,9 +62,14 @@ class Importer {
    * Run the extract part of the process.
    */
   public function extract($pathToFile): Import {
-    return $this->extractOperation()
+    $import = $this->extractOperation()
       ->setSource($pathToFile)
       ->getImport();
+    
+    // Save the entity
+    $import->save();
+    
+    return $import;
   }
 
   /**

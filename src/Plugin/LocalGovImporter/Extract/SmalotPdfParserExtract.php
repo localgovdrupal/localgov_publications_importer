@@ -10,7 +10,7 @@ use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\localgov_publications_importer\Attribute\Extract;
 use Drupal\localgov_publications_importer\Image;
-use Drupal\localgov_publications_importer\Import;
+use Drupal\localgov_publications_importer\Entity\Import;
 use Drupal\localgov_publications_importer\ImportInterface;
 use Drupal\localgov_publications_importer\Page;
 use Smalot\PdfParser\Config as PdfParserConfig;
@@ -81,7 +81,7 @@ class SmalotPdfParserExtract extends ExtractPluginBase implements ContainerFacto
    */
   public function getImport(): ?ImportInterface {
 
-    $import = new Import($this->pathToFile);
+    $import = Import::create(['path_to_file' => $this->pathToFile]);
 
     $pdf = $this->parseFile();
 

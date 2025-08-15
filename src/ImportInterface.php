@@ -43,4 +43,34 @@ interface ImportInterface {
    */
   public function removePage(int $pageNumber): void;
 
+  /**
+   * Get the path to the original file.
+   */
+  public function getPathToFile(): string;
+
+  /**
+   * Set the path to the original file.
+   */
+  public function setPathToFile(string $pathToFile): void;
+
+  /**
+   * Get the status of the import.
+   */
+  public function getStatus(): int;
+
+  /**
+   * Set the status of the import.
+   */
+  public function setStatus(int $status): void;
+
+  /**
+   * Get the created timestamp.
+   */
+  public function getCreated(): int;
+
+  /**
+   * Set the created timestamp.
+   */
+  public function setCreated(int $timestamp): void;
+
 }

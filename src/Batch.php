@@ -40,7 +40,7 @@ class Batch {
     // Set this method to keep being called until we decide we're done.
     $context['finished'] = 0;
 
-    /** @var \Drupal\localgov_publications_importer\Import $import */
+    /** @var \Drupal\localgov_publications_importer\Entity\Import $import */
     $import = $context['results']['import'];
 
     if (isset($context['sandbox']['done'])) {

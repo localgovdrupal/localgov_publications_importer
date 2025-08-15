@@ -17,6 +17,7 @@ use Drupal\localgov_publications_importer\PageInterface;
  *   handlers = {
  *     "storage" = "Drupal\Core\Entity\Sql\SqlContentEntityStorage",
  *     "storage_schema" = "Drupal\Core\Entity\Sql\SqlContentEntityStorageSchema",
+ *     "views_data" = "Drupal\views\EntityViewsData",
  *   },
  *   base_table = "import",
  *   entity_keys = {
@@ -125,6 +126,20 @@ class Import extends ContentEntityBase implements ImportInterface {
   }
 
   /**
+   * Get the creator user.
+   */
+  public function getCreator() {
+    return $this->get('creator')->entity;
+  }
+
+  /**
+   * Set the creator user.
+   */
+  public function setCreator($user): void {
+    $this->set('creator', $user);
+  }
+
+  /**
    * {@inheritdoc}
    */
   public static function baseFieldDefinitions(EntityTypeInterface $entity_type) {
@@ -134,27 +149,80 @@ class Import extends ContentEntityBase implements ImportInterface {
       ->setLabel(t('Path to file'))
       ->setDescription(t('Path to the original file being imported.'))
       ->setRequired(TRUE)
-      ->setSetting('max_length', 255);
+      ->setSetting('max_length', 255)
+      ->setDisplayOptions('view', [
+        'label' => 'above',
+        'type' => 'string',
+        'weight' => -4,
+      ])
+      ->setDisplayConfigurable('view', TRUE);
 
     $fields['title'] = BaseFieldDefinition::create('string')
       ->setLabel(t('Title'))
       ->setDescription(t('Title of the document.'))
-      ->setSetting('max_length', 255);
+      ->setSetting('max_length', 255)
+      ->setDisplayOptions('view', [
+        'label' => 'above',
+        'type' => 'string',
+        'weight' => -5,
+      ])
+      ->setDisplayConfigurable('view', TRUE);
 
     $fields['pages'] = BaseFieldDefinition::create('string_long')
       ->setLabel(t('Pages'))
-      ->setDescription(t('Serialized array of pages.'));
+      ->setDescription(t('Serialized array of pages.'))
+      ->setDisplayOptions('view', [
+        'label' => 'above',
+        'type' => 'text_default',
+        'weight' => -3,
+      ])
+      ->setDisplayConfigurable('view', TRUE);
 
     $fields['status'] = BaseFieldDefinition::create('integer')
       ->setLabel(t('Status'))
       ->setDescription(t('The status of the import.'))
       ->setDefaultValue(self::STATUS_PENDING)
-      ->setRequired(TRUE);
+      ->setRequired(TRUE)
+      ->setDisplayOptions('view', [
+        'label' => 'above',
+        'type' => 'number_integer',
+        'weight' => -2,
+      ])
+      ->setDisplayConfigurable('view', TRUE);
+
+    $fields['creator'] = BaseFieldDefinition::create('entity_reference')
+      ->setLabel(t('Creator'))
+      ->setDescription(t('The user who created this import.'))
+      ->setSetting('target_type', 'user')
+      ->setSetting('handler', 'default')
+      ->setDisplayOptions('view', [
+        'label' => 'above',
+        'type' => 'entity_reference_label',
+        'weight' => 0,
+      ])
+      ->setDisplayOptions('form', [
+        'type' => 'entity_reference_autocomplete',
+        'weight' => 0,
+        'settings' => [
+          'match_operator' => 'CONTAINS',
+          'size' => '60',
+          'autocomplete_type' => 'tags',
+          'placeholder' => '',
+        ],
+      ])
+      ->setDisplayConfigurable('view', TRUE)
+      ->setDisplayConfigurable('form', TRUE);
 
     $fields['created'] = BaseFieldDefinition::create('created')
       ->setLabel(t('Created'))
       ->setDescription(t('The time that the import was created.'))
-      ->setRequired(TRUE);
+      ->setRequired(TRUE)
+      ->setDisplayOptions('view', [
+        'label' => 'above',
+        'type' => 'timestamp',
+        'weight' => -1,
+      ])
+      ->setDisplayConfigurable('view', TRUE);
 
     return $fields;
   }

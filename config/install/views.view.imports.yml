@@ -291,17 +291,17 @@ display:
           multi_type: separator
           separator: ', '
           field_api_classes: false
-        file:
-          id: file
+        result:
+          id: result
           table: import
-          field: file
+          field: result
           relationship: none
           group_type: group
           admin_label: ''
           entity_type: import
-          entity_field: file
+          entity_field: result
           plugin_id: field
-          label: File
+          label: Result
           exclude: false
           alter:
             alter_text: false
@@ -458,7 +458,23 @@ display:
             value: 'There are no imports to show.'
             format: wysiwyg
           tokenize: false
-      sorts: {  }
+      sorts:
+        created:
+          id: created
+          table: import
+          field: created
+          relationship: none
+          group_type: group
+          admin_label: ''
+          entity_type: import
+          entity_field: created
+          plugin_id: date
+          order: DESC
+          expose:
+            label: ''
+            field_identifier: ''
+          exposed: false
+          granularity: second
       arguments: {  }
       filters: {  }
       style:

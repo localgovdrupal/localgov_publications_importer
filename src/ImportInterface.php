@@ -2,6 +2,8 @@
 
 namespace Drupal\localgov_publications_importer;
 
+use Drupal\file\Entity\File;
+
 /**
  * Interface for content being imported.
  */
@@ -44,16 +46,6 @@ interface ImportInterface {
   public function removePage(int $pageNumber): void;
 
   /**
-   * Get the path to the original file.
-   */
-  public function getPathToFile(): string;
-
-  /**
-   * Set the path to the original file.
-   */
-  public function setPathToFile(string $pathToFile): void;
-
-  /**
    * Get the status of the import.
    */
   public function getStatus(): int;
@@ -72,5 +64,15 @@ interface ImportInterface {
    * Set the created timestamp.
    */
   public function setCreated(int $timestamp): void;
+
+  /**
+   * Get the import pipeline ID to use.
+   */
+  public function getPipeline(): string;
+
+  /**
+   * Get the file.
+   */
+  public function getFile(): ?File;
 
 }

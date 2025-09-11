@@ -1,8 +1,15 @@
 localgov_publications_importer.import:
   title: 'Import Publication'
   description: 'Import a publication from a file.'
-  parent: system.admin_content
+  parent: view.imports.page_1
   route_name: localgov_publications_importer.import
+  weight: 100
+  menu_name: admin
+localgov_publications_importer.imports:
+  title: 'Imports'
+  description: 'Imports from files.'
+  parent: system.admin_content
+  route_name: view.imports.page_1
   weight: 100
   menu_name: admin
 entity.import_pipeline.collection:

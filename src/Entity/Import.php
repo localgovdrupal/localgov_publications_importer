@@ -5,8 +5,10 @@ namespace Drupal\localgov_publications_importer\Entity;
 use Drupal\Core\Entity\ContentEntityBase;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
+use Drupal\file\Entity\File;
 use Drupal\localgov_publications_importer\ImportInterface;
 use Drupal\localgov_publications_importer\PageInterface;
+use Drupal\node\NodeInterface;
 
 /**
  * Defines the Import entity.
@@ -18,12 +20,22 @@ use Drupal\localgov_publications_importer\PageInterface;
  *     "storage" = "Drupal\Core\Entity\Sql\SqlContentEntityStorage",
  *     "storage_schema" = "Drupal\Core\Entity\Sql\SqlContentEntityStorageSchema",
  *     "views_data" = "Drupal\views\EntityViewsData",
+ *     "route_provider" = {
+ *       "html" = "Drupal\Core\Entity\Routing\AdminHtmlRouteProvider",
+ *     },
+ *     "access" = "Drupal\localgov_publications_importer\ImportAccessControlHandler",
+ *     "form" = {
+ *       "delete" = "Drupal\Core\Entity\ContentEntityDeleteForm"
+ *     },
  *   },
  *   base_table = "import",
  *   entity_keys = {
  *     "id" = "id",
  *     "uuid" = "uuid",
  *   },
+ *   links = {
+ *     "delete-form" = "/admin/content/imports/{import}/delete"
+ *   }
  * )
  */
 class Import extends ContentEntityBase implements ImportInterface {
@@ -84,17 +96,17 @@ class Import extends ContentEntityBase implements ImportInterface {
   }
 
   /**
-   * Get the path to the original file.
+   * {@inheritdoc}
    */
-  public function getPathToFile(): string {
-    return $this->get('path_to_file')->value ?? '';
+  public function getPipeline(): string {
+    return $this->get('pipeline')->value ?? '';
   }
 
   /**
-   * Set the path to the original file.
+   * Set the import pipeline ID to use.
    */
-  public function setPathToFile(string $pathToFile): void {
-    $this->set('path_to_file', $pathToFile);
+  public function setPipeline(string $pipeline): void {
+    $this->set('pipeline', $pipeline);
   }
 
   /**
@@ -109,6 +121,10 @@ class Import extends ContentEntityBase implements ImportInterface {
    */
   public function setStatus(int $status): void {
     $this->set('status', $status);
+  }
+
+  public function setResult(NodeInterface $node) {
+    $this->get('result')->entity = $node;
   }
 
   /**
@@ -140,26 +156,89 @@ class Import extends ContentEntityBase implements ImportInterface {
   }
 
   /**
+   * Get the file.
+   */
+  public function getFile(): ?File {
+    $fileId = $this->get('file')->target_id;
+    if ($fileId) {
+      return File::load($fileId);
+    }
+    return NULL;
+  }
+
+  /**
+   * Set the file.
+   */
+  public function setFile(File $file): void {
+    $this->set('file', $file);
+  }
+
+  /**
    * {@inheritdoc}
    */
   public static function baseFieldDefinitions(EntityTypeInterface $entity_type) {
     $fields = parent::baseFieldDefinitions($entity_type);
 
-    $fields['path_to_file'] = BaseFieldDefinition::create('string')
-      ->setLabel(t('Path to file'))
-      ->setDescription(t('Path to the original file being imported.'))
-      ->setRequired(TRUE)
-      ->setSetting('max_length', 255)
+    $fields['file'] = BaseFieldDefinition::create('entity_reference')
+      ->setLabel(t('File'))
+      ->setDescription(t('The file being imported.'))
+      ->setSetting('target_type', 'file')
+      ->setSetting('handler', 'default')
       ->setDisplayOptions('view', [
         'label' => 'above',
-        'type' => 'string',
-        'weight' => -4,
+        'type' => 'entity_reference_label',
+        'weight' => 0,
       ])
-      ->setDisplayConfigurable('view', TRUE);
+      ->setDisplayOptions('form', [
+        'type' => 'entity_reference_autocomplete',
+        'weight' => 0,
+        'settings' => [
+          'match_operator' => 'CONTAINS',
+          'size' => '60',
+          'autocomplete_type' => 'tags',
+          'placeholder' => '',
+        ],
+      ])
+      ->setDisplayConfigurable('view', TRUE)
+      ->setDisplayConfigurable('form', TRUE);
+
+    $fields['result'] = BaseFieldDefinition::create('entity_reference')
+      ->setLabel(t('Result'))
+      ->setDescription(t('The result of the import.'))
+      ->setSetting('target_type', 'node')
+      ->setSetting('handler', 'default')
+      ->setDisplayOptions('view', [
+        'label' => 'above',
+        'type' => 'entity_reference_label',
+        'weight' => 0,
+      ])
+      ->setDisplayOptions('form', [
+        'type' => 'entity_reference_autocomplete',
+        'weight' => 0,
+        'settings' => [
+          'match_operator' => 'CONTAINS',
+          'size' => '60',
+          'autocomplete_type' => 'tags',
+          'placeholder' => '',
+        ],
+      ])
+      ->setDisplayConfigurable('view', TRUE)
+      ->setDisplayConfigurable('form', TRUE);
 
     $fields['title'] = BaseFieldDefinition::create('string')
       ->setLabel(t('Title'))
       ->setDescription(t('Title of the document.'))
+      ->setSetting('max_length', 255)
+      ->setDisplayOptions('view', [
+        'label' => 'above',
+        'type' => 'string',
+        'weight' => -5,
+      ])
+      ->setDisplayConfigurable('view', TRUE);
+
+    $fields['pipeline'] = BaseFieldDefinition::create('string')
+      ->setLabel(t('Pipeline'))
+      ->setDescription(t('Import pipeline to use.'))
       ->setSetting('max_length', 255)
       ->setDisplayOptions('view', [
         'label' => 'above',
@@ -226,5 +305,4 @@ class Import extends ContentEntityBase implements ImportInterface {
 
     return $fields;
   }
-
 }

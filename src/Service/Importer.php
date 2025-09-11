@@ -7,6 +7,7 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\localgov_publications_importer\Entity\ImportPipeline;
 use Drupal\localgov_publications_importer\ExtractOperationManager;
 use Drupal\localgov_publications_importer\Entity\Import;
+use Drupal\localgov_publications_importer\ImportInterface;
 use Drupal\localgov_publications_importer\Plugin\ExtractInterface;
 use Drupal\localgov_publications_importer\Plugin\SaveInterface;
 use Drupal\localgov_publications_importer\SaveOperationManager;
@@ -46,9 +47,9 @@ class Importer {
   }
 
   /**
-   * Imports the given file as a new LocalGov Publication page.
+   * Imports the given file.
    *
-   * Call this to import a PDF in one go, which is probably a bad idea.
+   * Call this to run the whole import process in one go.
    */
   public function importPdf($pathToFile): ?NodeInterface {
     $import = $this->extract($pathToFile);
@@ -61,21 +62,16 @@ class Importer {
   /**
    * Run the extract part of the process.
    */
-  public function extract($pathToFile): Import {
-    $import = $this->extractOperation()
-      ->setSource($pathToFile)
-      ->getImport();
-    
-    // Save the entity
+  public function extract(ImportInterface $import): Import {
+    $this->extractOperation()->extract($import);
     $import->save();
-    
     return $import;
   }
 
   /**
    * Run a single step of the transform part of the process.
    */
-  public function transform($import, $pluginID, $page): void {
+  public function transform(ImportInterface $import, string $pluginID, int $page): void {
 
     foreach ($this->transformOperations() as $transformOperation) {
       if ($transformOperation->getPluginId() === $pluginID) {

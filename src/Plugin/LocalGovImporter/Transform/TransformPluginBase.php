@@ -21,8 +21,9 @@ abstract class TransformPluginBase extends PluginBase implements TransformInterf
    */
   public function transform(ImportInterface $import, ?int $page = NULL): void {
 
-    foreach ($import->getPages() as $currentPageNumber => $currentPage) {
+    $pages = $import->getPages();
 
+    foreach ($pages as $currentPageNumber => $currentPage) {
       // $page is a limit. If it's not null, only process that page.
       if ($page !== NULL && $page !== $currentPageNumber) {
         continue;
@@ -30,6 +31,8 @@ abstract class TransformPluginBase extends PluginBase implements TransformInterf
 
       $this->transformPage($currentPage);
     }
+
+    $import->setPages($pages);
   }
 
   /**

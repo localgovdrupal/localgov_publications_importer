@@ -22,12 +22,12 @@ interface ExtractInterface {
   public function setSource(string $pathToFile): self;
 
   /**
-   * Creates a new Import object with the extracted content.
+   * Extracts content from the file attached to the import entity.
    *
    * @return ?\Drupal\localgov_publications_importer\ImportInterface
    *   The new import.
    */
-  public function getImport(): ?ImportInterface;
+  public function extract(ImportInterface $import): void;
 
   /**
    * Is this plugin configurable?

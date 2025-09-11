@@ -1,5 +1,5 @@
 localgov_publications_importer.import:
-  path: '/admin/content/import-publication'
+  path: '/admin/content/imports/import-publication'
   defaults:
     _form: 'Drupal\localgov_publications_importer\Form\PublicationImportForm'
     _title: 'Import Publication'

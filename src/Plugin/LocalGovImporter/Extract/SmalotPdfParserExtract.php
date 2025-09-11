@@ -79,11 +79,9 @@ class SmalotPdfParserExtract extends ExtractPluginBase implements ContainerFacto
   /**
    * {@inheritDoc}
    */
-  public function getImport(): ?ImportInterface {
+  public function extract($import): void {
 
-    $import = Import::create(['path_to_file' => $this->pathToFile]);
-
-    $pdf = $this->parseFile();
+    $pdf = $this->parseFile($import->getFile()->getFileUri());
 
     $this->setTitle($import, $pdf);
 
@@ -114,7 +112,6 @@ class SmalotPdfParserExtract extends ExtractPluginBase implements ContainerFacto
 
       $import->addPage($page);
     }
-    return $import;
   }
 
   /**
@@ -172,12 +169,12 @@ class SmalotPdfParserExtract extends ExtractPluginBase implements ContainerFacto
   /**
    * Set up the parser and parse the file.
    */
-  protected function parseFile(): Document {
+  protected function parseFile(string $pathToFile): Document {
     $config = new PdfParserConfig();
     // An empty string can prevent words from breaking up.
     $config->setHorizontalOffset('');
     $parser = new PdfParser([], $config);
-    return $parser->parseFile($this->pathToFile);
+    return $parser->parseFile($pathToFile);
   }
 
   /**

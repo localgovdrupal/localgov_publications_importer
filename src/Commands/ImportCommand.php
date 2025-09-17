@@ -81,13 +81,35 @@ class ImportCommand extends DrushCommands {
       return;
     }
 
-
-
     // If the process didn't fail, mark it as completed.
     $import = $importStorage->load($import->id());
     $import->setStatus(Import::STATUS_COMPLETED);
     $import->save();
+  }
 
+  /**
+   * Resets the status of a given import so it can be reimported.
+   *
+   * @command localgov_publications_importer:reset
+   * @param int $import_id
+   *   The id of the import to reset
+   * @aliases lpir
+   */
+  public function reset(int $import_id): void {
+
+    // @todo Move all this into a service.
+
+    // Get the Import entity with the lowest creation time that's still pending.
+    $entityTypeManager = \Drupal::entityTypeManager();
+    $importStorage = $entityTypeManager->getStorage('import');
+
+    /** @var ImportInterface $import */
+    $import = $importStorage->load($import_id);
+
+    if ($import instanceof ImportInterface) {
+      $import->setStatus(Import::STATUS_PENDING);
+      $import->save();
+    }
   }
 
 }

@@ -163,7 +163,7 @@ class SmalotPdfParserExtract extends ExtractPluginBase implements ContainerFacto
 
     // Fall back to the filename if we can't find a title in the PDF.
     // This isn't ideal, but we need to have a title to save a node.
-    $import->setTitle(basename($this->pathToFile));
+    $import->setTitle(basename($import->getFile()->getFileUri()));
   }
 
   /**

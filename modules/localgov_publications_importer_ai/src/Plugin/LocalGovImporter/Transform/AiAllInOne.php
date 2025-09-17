@@ -2,12 +2,13 @@
 
 namespace Drupal\localgov_publications_importer_ai\Plugin\LocalGovImporter\Transform;
 
+use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\ai\AiProviderPluginManager;
 use Drupal\ai\Exception\AiRequestErrorException;
 use Drupal\ai\OperationType\Chat\ChatInput;
 use Drupal\ai\OperationType\Chat\ChatMessage;
-use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
-use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\ai_provider_aws_bedrock\Decorator\BedrockJsonSerializeDecorator;
 use Drupal\localgov_publications_importer\Attribute\Transform;
 use Drupal\localgov_publications_importer\Exception\RetryableTransformFailure;
 use Drupal\localgov_publications_importer\ImportInterface;
@@ -30,19 +31,34 @@ class AiAllInOne extends TransformPluginBase implements ContainerFactoryPluginIn
    *
    * This can be overridden by the plugin's configuration.
    */
-  protected string $prompt = 'You are a website content editor. Your task is to format
-    the plain text the user will provide for you with appropriate HTML markup.
-    Do not rewrite or edit the text content of the document, the text content
-    must be returned exactly as is. Only return HTML markup that would be valid
-    for pasting inside a website CMS text editor, do not include markdown style
-    backticks. Use the first line as a <h1> if it makes sense as a complete sentence, mark up the remainder of the text
-    using only the html tags <h2>, <h3>, <h4>, <h5>, <h6>, <p>, <ul>, <ol>,
-    <li>. Keep headings in sequence and be consistent. You will be sent the text
-    for an entire document. Split the given text into pages where page breaks are
-    appropriate. Return a single message for all the pages, comprised of
-    valid JSON. The returned message should be an array of objects, where each
-    object has a title key with a suggested title for the page, and a content
-    key, with the HTML content for that page. Only return JSON. Do not wrap the JSON message in markdown.';
+  protected string $prompt = '
+You are a website content editor. Format the provided text into valid JSON only.
+
+Requirements:
+- Return ONLY a JSON array of page objects, no other text
+- Each page object has: "title" (string), "content" (string)
+- Split the content into MULTIPLE pages
+- Each page should contain 200-500 words of content when possible
+- Break pages at natural stopping points: section boundaries, topic changes, or major headings
+- Content value contains HTML using only: h1, h2, h3, h4, h5, h6, p, ul, ol, li
+- Use the first line as h1 if it\'s a complete sentence
+- Preserve original text exactly, only add HTML tags
+- Generate descriptive titles that reflect each page\'s main topic
+- Properly escape all quotes and special characters in JSON strings
+
+Split strategy:
+- Look for major headings, topic shifts, or natural content breaks
+- Each page should feel complete but part of a larger whole
+- Distribute content evenly across pages
+- Don\'t create pages that are too short (under 100 words) unless necessary
+
+Example format:
+[
+  {"title":"Introduction and Overview","content":"<h1>Main Title</h1><p>Intro content...</p>"},
+{"title":"Key Concepts","content":"<h2>Section Title</h2><p>More content...</p>"},
+{"title":"Advanced Topics","content":"<h2>Another Section</h2><p>Final content...</p>"}
+]
+  ';
 
   /**
    * {@inheritdoc}
@@ -97,6 +113,10 @@ class AiAllInOne extends TransformPluginBase implements ContainerFactoryPluginIn
       $content[] = $pageObj->getContent();
     }
 
+    $allContent = implode(" ", $content);
+
+    //@todo: Rename this var.
+    // Keys are provider_id, model_id.
     $sets = $this->aiProvider->getDefaultProviderForOperationType('chat');
 
     // If there's no AI provider returned, don't try to use one.
@@ -111,11 +131,21 @@ class AiAllInOne extends TransformPluginBase implements ContainerFactoryPluginIn
     $provider->setChatSystemRole($this->prompt);
 
     $messages = new ChatInput([
-      new chatMessage('user', implode(" ", $content)),
+      new chatMessage('user', $allContent),
     ]);
 
     try {
-      $message = $provider->chat($messages, $sets['model_id'])->getNormalized();
+      $chatOutput = $provider->chat($messages, $sets['model_id']);
+      $message = $chatOutput->getNormalized();
+      $rawOutput = $chatOutput->getRawOutput();
+
+      // We only know how to handle this for bedrock at the moment.
+      if ($rawOutput instanceof BedrockJsonSerializeDecorator) {
+        $rawJson = $rawOutput->jsonSerialize();
+        if ($rawJson['stopReason'] === 'max_tokens') {
+          \Drupal::logger('localgov_publications_importer')->error("Hit maximum output token limit when generating content.");
+        }
+      }
     }
     catch (AiRequestErrorException $e) {
       // AiRequestErrorException is thrown for timeouts.
@@ -124,6 +154,15 @@ class AiAllInOne extends TransformPluginBase implements ContainerFactoryPluginIn
     }
 
     $aiResponseText = $message->getText();
+
+    // Here we need to trim off anything before or after the JSON, eg:
+    // "I'll format the provided text into valid JSON with multiple pages:"
+    // @todo Move this to a function.
+    $json_start = strpos($aiResponseText, '[');
+    $json_end = strrpos($aiResponseText, ']');
+    $json_length = 1 + $json_end - $json_start;
+    $aiResponseText = substr($aiResponseText, $json_start, $json_length);
+
     $aiResponse = json_decode($aiResponseText, TRUE);
 
     if ($aiResponse === NULL) {

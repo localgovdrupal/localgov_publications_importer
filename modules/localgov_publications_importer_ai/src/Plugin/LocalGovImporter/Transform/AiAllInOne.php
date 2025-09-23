@@ -2,6 +2,7 @@
 
 namespace Drupal\localgov_publications_importer_ai\Plugin\LocalGovImporter\Transform;
 
+use Drupal\ai\Plugin\ProviderProxy;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\ai\AiProviderPluginManager;
@@ -61,6 +62,20 @@ Example format:
   ';
 
   /**
+   * AI Provider ID.
+   *
+   * If this is empty the default provider for chat will be used.
+   */
+  protected string $aiProviderId = '';
+
+  /**
+   * AI Model ID.
+   *
+   * If this is empty the default model for chat will be used.
+   */
+  protected string $aiModelId = '';
+
+  /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
@@ -77,22 +92,11 @@ Example format:
    */
   public function __construct(
     array $configuration,
-          $plugin_id,
-          $plugin_definition,
-    protected AiProviderPluginManager $aiProvider,
+    $plugin_id,
+    $plugin_definition,
+    protected AiProviderPluginManager $aiProviderPluginManager,
   ) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
-
-    if (isset($configuration['prompt'])) {
-      $this->prompt = $configuration['prompt'];
-    }
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  public function order(): int {
-    return 40;
   }
 
   /**
@@ -115,27 +119,19 @@ Example format:
 
     $allContent = implode(" ", $content);
 
-    //@todo: Rename this var.
-    // Keys are provider_id, model_id.
-    $sets = $this->aiProvider->getDefaultProviderForOperationType('chat');
+    $this->configureAi();
 
-    // If there's no AI provider returned, don't try to use one.
-    // @todo Consider better ways to handle this.
-    // Log an error? Show a flash message?
-    if (is_null($sets)) {
+    $provider = $this->aiProvider();
+    if ($provider === NULL) {
       return;
     }
-
-    /** @var \Drupal\ai\OperationType\Chat\ChatInterface $provider */
-    $provider = $this->aiProvider->createInstance($sets['provider_id']);
-    $provider->setChatSystemRole($this->prompt);
 
     $messages = new ChatInput([
       new chatMessage('user', $allContent),
     ]);
 
     try {
-      $chatOutput = $provider->chat($messages, $sets['model_id']);
+      $chatOutput = $provider->chat($messages, $this->aiModelId);
       $message = $chatOutput->getNormalized();
       $rawOutput = $chatOutput->getRawOutput();
 
@@ -155,15 +151,7 @@ Example format:
 
     $aiResponseText = $message->getText();
 
-    // Here we need to trim off anything before or after the JSON, eg:
-    // "I'll format the provided text into valid JSON with multiple pages:"
-    // @todo Move this to a function.
-    $json_start = strpos($aiResponseText, '[');
-    $json_end = strrpos($aiResponseText, ']');
-    $json_length = 1 + $json_end - $json_start;
-    $aiResponseText = substr($aiResponseText, $json_start, $json_length);
-
-    $aiResponse = json_decode($aiResponseText, TRUE);
+    $aiResponse = $this->extractAndDecodeJson($aiResponseText);
 
     if ($aiResponse === NULL) {
       // Decoding the response failed.
@@ -182,6 +170,86 @@ Example format:
     }
 
     $import->setPages($pages);
+  }
+
+  /**
+
+   */
+  protected function aiProvider(): ?ProviderProxy {
+
+    // If there's no AI provider configured, don't try to use one.
+    // @todo Consider better ways to handle this.
+    // Log an error? Show a flash message?
+    if ($this->aiProviderId === '' || $this->aiModelId === '') {
+      return NULL;
+    }
+
+    $provider = $this->aiProviderPluginManager->createInstance($this->aiProviderId);
+    // Provider is an instance of ProviderProxy, which uses __call() to call
+    // methods on the inner plugin. Hence, it looks like ::setChatSystemRole()
+    // doesn't exist.
+    $provider->setChatSystemRole($this->prompt);
+
+    return $provider;
+  }
+
+  /**
+
+   */
+  protected function configureAi(): void {
+
+    if (isset($this->configuration['prompt'])) {
+      $this->prompt = $this->configuration['prompt'];
+    }
+
+    if (isset($this->configuration['aiProviderId'])) {
+      $this->aiProviderId = $this->configuration['aiProviderId'];
+    }
+
+    if (isset($this->configuration['aiModelId'])) {
+      $this->aiModelId = $this->configuration['aiModelId'];
+    }
+
+    // Keys are provider_id, model_id if we get an array back.
+    $defaults = $this->aiProviderPluginManager->getDefaultProviderForOperationType('chat');
+    if (is_array($defaults)) {
+      if ($this->aiProviderId === '') {
+        $this->aiProviderId = $defaults['provider_id'];
+      }
+      if ($this->aiModelId === '') {
+        $this->aiModelId = $defaults['model_id'];
+      }
+    }
+  }
+
+  /**
+   * Find a JSON encoded array of objects in a longer string.
+   *
+   * LLMs will often prepend intro text to their response, despite being asked
+   * not to. This method cuts down a response to just the JSON.
+   *
+   * @return string
+   */
+  protected function extractAndDecodeJson($aiResponseText) {
+
+    // Here we need to trim off anything before or after the JSON, eg:
+    // "I'll format the provided text into valid JSON with multiple pages:"
+    // Or even: "[This is the JSON output that represents the formatted content from the document.]"
+
+    // Remove any pairs of square brackets and their contents, if their contents
+    // does not contain a curly brace. This is either the AI's intro message
+    // contained in [] (why, Claude? Why??), or an empty result set, which we
+    // can't do anything with anyway.
+    $aiResponseText = preg_replace('/\[[^{]+\]/', '', $aiResponseText);
+
+    // Look for the start and end of the JSON encoded array of object, and trim
+    // off anything outside it.
+    $json_start = strpos($aiResponseText, '[');
+    $json_end = strrpos($aiResponseText, ']');
+    $json_length = 1 + $json_end - $json_start;
+    $aiResponseText = substr($aiResponseText, $json_start, $json_length);
+
+    return json_decode($aiResponseText, TRUE);
   }
 
   /**

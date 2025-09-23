@@ -36,14 +36,6 @@ abstract class TransformPluginBase extends PluginBase implements TransformInterf
   }
 
   /**
-   * {@inheritDoc}
-   */
-  public function order(): int {
-    // Default this to something in the middle.
-    return 50;
-  }
-
-  /**
    * Transforms a single page.
    *
    * If you just want to act on a single page, implement this in your plugin.

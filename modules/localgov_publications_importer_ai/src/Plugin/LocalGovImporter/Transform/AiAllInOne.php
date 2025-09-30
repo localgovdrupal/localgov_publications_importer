@@ -250,9 +250,9 @@ Example format:
     $json_length = 1 + $json_end - $json_start;
     $aiResponseText = substr($aiResponseText, $json_start, $json_length);
 
-    // Convert ASCII / ISO8859 strings to UTF-8 as json_decode objects to
-    // chars encoded like \u00fc.
-    $aiResponseText = mb_convert_encoding($aiResponseText, "UTF-8", mb_detect_encoding($aiResponseText));
+    // Convert ISO-8859-1 strings to UTF-8 as json_decode objects to chars
+    // encoded like \u00fc.
+    $aiResponseText = mb_convert_encoding($aiResponseText, 'UTF-8', 'ISO-8859-1');
 
     return json_decode($aiResponseText, TRUE);
   }

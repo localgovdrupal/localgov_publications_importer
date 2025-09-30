@@ -243,12 +243,16 @@ Example format:
     // can't do anything with anyway.
     $aiResponseText = preg_replace('/\[[^{]+\]/', '', $aiResponseText);
 
-    // Look for the start and end of the JSON encoded array of object, and trim
+    // Look for the start and end of the JSON encoded array of objects, and trim
     // off anything outside it.
     $json_start = strpos($aiResponseText, '[');
     $json_end = strrpos($aiResponseText, ']');
     $json_length = 1 + $json_end - $json_start;
     $aiResponseText = substr($aiResponseText, $json_start, $json_length);
+
+    // Convert ASCII / ISO8859 strings to UTF-8 as json_decode objects to
+    // chars encoded like \u00fc.
+    $aiResponseText = mb_convert_encoding($aiResponseText, "UTF-8", mb_detect_encoding($aiResponseText));
 
     return json_decode($aiResponseText, TRUE);
   }

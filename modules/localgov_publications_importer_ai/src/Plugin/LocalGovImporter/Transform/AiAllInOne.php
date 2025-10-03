@@ -45,7 +45,7 @@ Requirements:
 - Use the first line as h1 if it\'s a complete sentence
 - Preserve original text exactly, only add HTML tags
 - Generate descriptive titles that reflect each page\'s main topic
-- Properly escape all quotes, double quotes and special characters in JSON strings
+- Properly escape all double quotes in JSON strings
 - Ensure any JSON you create is valid. This is really important.
 
 Split strategy:
@@ -56,10 +56,11 @@ Split strategy:
 
 Example format:
 [
-  {"title":"Introduction and Overview","content":"<h1>Main Title<\/h1><p>Intro content...<\/p>"},
-  {"title":"Key Concepts","content":"<h2>Section Title<\/h2><p>More content...<\/p>"},
-  {"title":"Advanced Topics","content":"<h2>Another Section<\/h2><p>Final content...<\/p>"}
+  {"title":"Introduction and Overview","content":"<h1>Main Title</h1><p>Intro content...</p>"},
+  {"title":"Key Concepts","content":"<h2>Section Title</h2><p>More content...</p>"},
+  {"title":"Advanced Topics","content":"<h2>Another Section</h2><p>Final content...</p>"}
 ]
+
 ';
 
   /**

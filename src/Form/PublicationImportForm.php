@@ -119,6 +119,10 @@ class PublicationImportForm extends FormBase {
 
     $import->save();
 
+    // Mark the file as permanant so it doesn't get cleaned up prematurely.
+    $file->setPermanent();
+    $file->save();
+
     $form_state->setRedirect('view.imports.page_1');
   }
 

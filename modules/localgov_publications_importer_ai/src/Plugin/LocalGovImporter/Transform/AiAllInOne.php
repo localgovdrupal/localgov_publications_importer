@@ -98,6 +98,10 @@ Example format:
     protected AiProviderPluginManager $aiProviderPluginManager,
   ) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
+
+    if (isset($this->configuration['prompt'])) {
+      $this->prompt = $this->configuration['prompt'];
+    }
   }
 
   /**
@@ -156,8 +160,7 @@ Example format:
 
     if ($aiResponse === NULL) {
       // Decoding the response failed.
-      \Drupal::logger('localgov_publications_importer')->error("Couldn't decode JSON response.");
-      \Drupal::logger('localgov_publications_importer')->info($aiResponseText);
+      \Drupal::logger('localgov_publications_importer')->error("Couldn't decode JSON response: " . json_last_error_msg());
       return;
     }
 
@@ -199,10 +202,6 @@ Example format:
    */
   protected function configureAi(): void {
 
-    if (isset($this->configuration['prompt'])) {
-      $this->prompt = $this->configuration['prompt'];
-    }
-
     if (isset($this->configuration['aiProviderId'])) {
       $this->aiProviderId = $this->configuration['aiProviderId'];
     }
@@ -241,18 +240,16 @@ Example format:
     // does not contain a curly brace. This is either the AI's intro message
     // contained in [] (why, Claude? Why??), or an empty result set, which we
     // can't do anything with anyway.
-    $aiResponseText = preg_replace('/\[[^{]+\]/', '', $aiResponseText);
+    $aiResponseText = preg_replace('/\[[^{}\[\]]+\]/', '', $aiResponseText);
 
     // Look for the start and end of the JSON encoded array of objects, and trim
     // off anything outside it.
     $json_start = strpos($aiResponseText, '[');
     $json_end = strrpos($aiResponseText, ']');
-    $json_length = 1 + $json_end - $json_start;
-    $aiResponseText = substr($aiResponseText, $json_start, $json_length);
-
-    // Convert ISO-8859-1 strings to UTF-8 as json_decode objects to chars
-    // encoded like \u00fc.
-    $aiResponseText = mb_convert_encoding($aiResponseText, 'UTF-8', 'ISO-8859-1');
+    if (is_int($json_start) && is_int($json_end)) {
+      $json_length = 1 + $json_end - $json_start;
+      $aiResponseText = substr($aiResponseText, $json_start, $json_length);
+    }
 
     return json_decode($aiResponseText, TRUE);
   }
@@ -268,6 +265,7 @@ Example format:
    * {@inheritDoc}
    */
   public function getConfigurationForm(): array {
+
     return [
       'prompt' => [
         '#type' => 'textarea',

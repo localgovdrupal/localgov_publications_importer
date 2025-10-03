@@ -2,6 +2,7 @@
 
 namespace Drupal\localgov_publications_importer\Plugin\LocalGovImporter\Transform;
 
+use Drupal\Core\File\FileExists;
 use Drupal\Core\File\FileSystemInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\file\FileInterface;
@@ -43,7 +44,7 @@ class Images extends TransformPluginBase implements TransformInterface {
       if ($filter === 'DCTDecode') {
         // DCTDecode objects are JPEGs. Write them to a file and use them.
         $imageFileName = str_replace('temporary://', 'public://', $dataFileName) . '.jpg';
-        $fileEntity = $fileRepository->writeData(file_get_contents($dataFileName), $imageFileName);
+        $fileEntity = $fileRepository->writeData(file_get_contents($dataFileName), $imageFileName, FileExists::Replace);
         $fileSystem->delete($dataFileName);
       }
       else {
@@ -63,7 +64,7 @@ class Images extends TransformPluginBase implements TransformInterface {
           if ($imageFile instanceof \GdImage) {
             // Write a png into /tmp. We'll read it and save it properly.
             imagepng($imageFile, $dataFileName . '.png');
-            $fileEntity = $fileRepository->writeData(file_get_contents($dataFileName . '.png'), $imageFileName);
+            $fileEntity = $fileRepository->writeData(file_get_contents($dataFileName . '.png'), $imageFileName, FileExists::Replace);
             $fileSystem->delete($dataFileName);
             $fileSystem->delete($dataFileName . '.png');
           }

@@ -23,7 +23,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 #[Transform(
   id: 'transform_ai_aio',
   label: new TranslatableMarkup('AI all in one.'),
-  description: new TranslatableMarkup('Uses AI to reintroduce missing document structure.')
+  description: new TranslatableMarkup('Uses AI to reintroduce missing document structure. Sends the entire document in one request to the AI.')
 )]
 class AiAllInOne extends TransformPluginBase implements ContainerFactoryPluginInterface {
 

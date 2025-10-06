@@ -12,8 +12,7 @@
         }
     ],
     "require": {
-        "smalot/pdfparser": "^2.7.0",
-        "ext-mbstring": "*"
+        "smalot/pdfparser": "^2.7.0"
     },
     "require-dev": {
         "localgovdrupal/localgov_publications_importer_test_data": "1.x-dev"

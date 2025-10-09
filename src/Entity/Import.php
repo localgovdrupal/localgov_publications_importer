@@ -5,11 +5,11 @@ namespace Drupal\localgov_publications_importer\Entity;
 use Drupal\Core\Entity\ContentEntityBase;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
+use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\file\Entity\File;
 use Drupal\localgov_publications_importer\ImportInterface;
 use Drupal\localgov_publications_importer\PageInterface;
 use Drupal\node\NodeInterface;
-
 /**
  * Defines the Import entity.
  *
@@ -174,6 +174,35 @@ class Import extends ContentEntityBase implements ImportInterface {
   }
 
   /**
+   * Get the images.
+   *
+   * @return File[]
+   */
+  public function getImages(): array {
+    $images = [];
+    foreach($this->get('images') as $image) {
+      $images[] = File::load($image->target_id);
+    }
+    return $images;
+  }
+
+  /**
+   * Set the images.
+   *
+   * @return File[]
+   */
+  public function setImages($values): void {
+    $this->set('images', $values);
+  }
+
+  /**
+   * Add an image.
+   */
+  public function addImage(File $file): void {
+    $this->get('images')->appendItem($file);
+  }
+
+  /**
    * {@inheritdoc}
    */
   public static function baseFieldDefinitions(EntityTypeInterface $entity_type) {
@@ -273,6 +302,30 @@ class Import extends ContentEntityBase implements ImportInterface {
       ->setLabel(t('Creator'))
       ->setDescription(t('The user who created this import.'))
       ->setSetting('target_type', 'user')
+      ->setSetting('handler', 'default')
+      ->setDisplayOptions('view', [
+        'label' => 'above',
+        'type' => 'entity_reference_label',
+        'weight' => 0,
+      ])
+      ->setDisplayOptions('form', [
+        'type' => 'entity_reference_autocomplete',
+        'weight' => 0,
+        'settings' => [
+          'match_operator' => 'CONTAINS',
+          'size' => '60',
+          'autocomplete_type' => 'tags',
+          'placeholder' => '',
+        ],
+      ])
+      ->setDisplayConfigurable('view', TRUE)
+      ->setDisplayConfigurable('form', TRUE);
+
+    $fields['images'] = BaseFieldDefinition::create('entity_reference')
+      ->setLabel(t('Images'))
+      ->setCardinality(FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED)
+      ->setDescription(t('Images extracted from the imported file.'))
+      ->setSetting('target_type', 'file')
       ->setSetting('handler', 'default')
       ->setDisplayOptions('view', [
         'label' => 'above',

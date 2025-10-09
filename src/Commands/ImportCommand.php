@@ -108,6 +108,8 @@ class ImportCommand extends DrushCommands {
 
     if ($import instanceof ImportInterface) {
       $import->setStatus(Import::STATUS_PENDING);
+      $import->setPages([]);
+      $import->setImages([]);
       $import->save();
     }
   }

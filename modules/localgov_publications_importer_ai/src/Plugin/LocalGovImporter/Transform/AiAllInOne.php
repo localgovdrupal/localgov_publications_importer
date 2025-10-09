@@ -33,7 +33,7 @@ class AiAllInOne extends TransformPluginBase implements ContainerFactoryPluginIn
    * This can be overridden by the plugin's configuration.
    */
   protected string $prompt = '
-You are a website content editor. Format the provided text into valid JSON only.
+You are a website content editor. Format the provided text and HTML into valid JSON only.
 
 Requirements:
 - Return ONLY a JSON array of page objects, no other text
@@ -41,10 +41,11 @@ Requirements:
 - Split the content into MULTIPLE pages
 - Each page should contain 200-500 words of content when possible
 - Break pages at natural stopping points: section boundaries, topic changes, or major headings
-- Content value contains HTML using only: h1, h2, h3, h4, h5, h6, p, ul, ol, li
+- Content value contains HTML using only the tags: h1, h2, h3, h4, h5, h6, p, ul, ol, li, img
 - Use the first line as h1 if it\'s a complete sentence
-- Preserve original text exactly, only add HTML tags
+- Preserve original text and HTML tags exactly, only add HTML tags
 - Generate descriptive titles that reflect each page\'s main topic
+- Pay special attention to img tags - they must be preserved with all original attributes
 - Properly escape all double quotes in JSON strings
 - Ensure any JSON you create is valid. This is really important.
 
@@ -56,7 +57,7 @@ Split strategy:
 
 Example format:
 [
-  {"title":"Introduction and Overview","content":"<h1>Main Title</h1><p>Intro content...</p>"},
+  {"title":"Introduction and Overview","content":"<h1>Main Title</h1><img src="/example-image.jpg"><p>Intro content...</p>"},
   {"title":"Key Concepts","content":"<h2>Section Title</h2><p>More content...</p>"},
   {"title":"Advanced Topics","content":"<h2>Another Section</h2><p>Final content...</p>"}
 ]
@@ -121,6 +122,9 @@ Example format:
     // Get all the content.
     foreach ($import->getPages() as $pageObj) {
       $content[] = $pageObj->getContent();
+      foreach ($pageObj->getImages() as $image) {
+        $content[] = $image->toPlaceholder();
+      }
     }
 
     $allContent = implode(" ", $content);

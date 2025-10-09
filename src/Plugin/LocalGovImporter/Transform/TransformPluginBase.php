@@ -17,11 +17,19 @@ use Drupal\localgov_publications_importer\Plugin\TransformInterface;
 abstract class TransformPluginBase extends PluginBase implements TransformInterface {
 
   /**
+   * @var ImportInterface
+   *   The import being worked on.
+   */
+  protected $import;
+
+  /**
    * {@inheritDoc}
    */
   public function transform(ImportInterface $import, ?int $page = NULL): void {
 
-    $pages = $import->getPages();
+    $this->import = $import;
+
+    $pages = $this->import->getPages();
 
     foreach ($pages as $currentPageNumber => $currentPage) {
       // $page is a limit. If it's not null, only process that page.
@@ -32,7 +40,7 @@ abstract class TransformPluginBase extends PluginBase implements TransformInterf
       $this->transformPage($currentPage);
     }
 
-    $import->setPages($pages);
+    $this->import->setPages($pages);
   }
 
   /**

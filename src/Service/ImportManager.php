@@ -39,27 +39,27 @@ class ImportManager {
    */
   public function getNextToImport(): ?ImportInterface {
     $storage = $this->entityTypeManager->getStorage('import');
-    
+
     $query = $storage->getQuery()
       ->condition('status', Import::STATUS_PENDING)
       ->sort('created', 'ASC')
       ->range(0, 1)
       ->accessCheck(FALSE);
-    
+
     $ids = $query->execute();
-    
+
     if (empty($ids)) {
       return NULL;
     }
-    
+
     $import_id = reset($ids);
     $import = $storage->load($import_id);
-    
+
     if ($import) {
       $import->setStatus(Import::STATUS_PROCESSING);
       $import->save();
     }
-    
+
     return $import;
   }
 

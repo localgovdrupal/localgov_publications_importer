@@ -182,7 +182,7 @@ Example format:
   }
 
   /**
-
+   * Get the configured AI provider.
    */
   protected function aiProvider(): ?ProviderProxy {
 
@@ -203,7 +203,7 @@ Example format:
   }
 
   /**
-
+   * Configure the AI provider and model.
    */
   protected function configureAi(): void {
 
@@ -228,18 +228,17 @@ Example format:
   }
 
   /**
-   * Find a JSON encoded array of objects in a longer string.
+   * Find and decode a JSON encoded array of objects in a longer string.
    *
    * LLMs will often prepend intro text to their response, despite being asked
    * not to. This method cuts down a response to just the JSON.
-   *
-   * @return string
    */
-  protected function extractAndDecodeJson($aiResponseText) {
+  protected function extractAndDecodeJson($aiResponseText): array {
 
     // Here we need to trim off anything before or after the JSON, eg:
     // "I'll format the provided text into valid JSON with multiple pages:"
-    // Or even: "[This is the JSON output that represents the formatted content from the document.]"
+    // Or even: "[This is the JSON output that represents the formatted content
+    // from the document.]".
 
     // Remove any pairs of square brackets and their contents, if their contents
     // does not contain a curly brace. This is either the AI's intro message

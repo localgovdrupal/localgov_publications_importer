@@ -10,6 +10,7 @@ use Drupal\file\Entity\File;
 use Drupal\localgov_publications_importer\ImportInterface;
 use Drupal\localgov_publications_importer\PageInterface;
 use Drupal\node\NodeInterface;
+
 /**
  * Defines the Import entity.
  *
@@ -123,6 +124,9 @@ class Import extends ContentEntityBase implements ImportInterface {
     $this->set('status', $status);
   }
 
+  /*
+   * Set the result of the import.
+   */
   public function setResult(NodeInterface $node) {
     $this->get('result')->entity = $node;
   }
@@ -176,11 +180,12 @@ class Import extends ContentEntityBase implements ImportInterface {
   /**
    * Get the images.
    *
-   * @return File[]
+   * @return \Drupal\file\Entity\File[]
+   *   Array of files, which are images.
    */
   public function getImages(): array {
     $images = [];
-    foreach($this->get('images') as $image) {
+    foreach ($this->get('images') as $image) {
       $images[] = File::load($image->target_id);
     }
     return $images;
@@ -188,8 +193,6 @@ class Import extends ContentEntityBase implements ImportInterface {
 
   /**
    * Set the images.
-   *
-   * @return File[]
    */
   public function setImages($values): void {
     $this->set('images', $values);
@@ -358,4 +361,5 @@ class Import extends ContentEntityBase implements ImportInterface {
 
     return $fields;
   }
+
 }

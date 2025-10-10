@@ -2,13 +2,11 @@
 
 namespace Drupal\localgov_publications_importer\Form;
 
-use Drupal\Core\Batch\BatchBuilder;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Link;
 use Drupal\Core\Url;
-use Drupal\localgov_publications_importer\Batch;
 use Drupal\localgov_publications_importer\Entity\Import;
 use Drupal\localgov_publications_importer\Service\Importer as PublicationImporter;
 use Drupal\user\Entity\User;
@@ -108,7 +106,9 @@ class PublicationImportForm extends FormBase {
 
     $importPipelineId = $form_state->getValue('import_pipeline');
 
-    $user = User::load(\Drupal::currentUser()->id());
+    $user = $this->entityTypeManager
+      ->getStorage('user')
+      ->load($this->currentUser()->id());
 
     $import = Import::create([
       'file' => $file,
@@ -119,7 +119,7 @@ class PublicationImportForm extends FormBase {
 
     $import->save();
 
-    // Mark the file as permanant so it doesn't get cleaned up prematurely.
+    // Mark the file as permanent, so it doesn't get cleaned up prematurely.
     $file->setPermanent();
     $file->save();
 

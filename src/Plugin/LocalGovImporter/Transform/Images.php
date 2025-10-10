@@ -68,7 +68,7 @@ class Images extends TransformPluginBase implements TransformInterface {
             $fileSystem->delete($dataFileName . '.png');
           }
           else {
-            \Drupal::logger('localgov_pdf_importer')
+            \Drupal::logger('localgov_publications_importer')
               ->error("Couldn't import image $width, $height, $bitsPerComponent, $colorSpace");
           }
         }

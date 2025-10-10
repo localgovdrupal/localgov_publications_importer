@@ -18,6 +18,7 @@ use Smalot\PdfParser\Document;
 use Smalot\PdfParser\Element\ElementArray;
 use Smalot\PdfParser\Element\ElementName;
 use Smalot\PdfParser\Element\ElementXRef;
+use Smalot\PdfParser\Header;
 use Smalot\PdfParser\PDFObject;
 use Smalot\PdfParser\Page as PdfPage;
 use Smalot\PdfParser\Parser as PdfParser;
@@ -183,7 +184,7 @@ class SmalotPdfParserExtract extends ExtractPluginBase implements ContainerFacto
    * The image content is written to a temp file, and the metadata is saved to
    * an object on the extract page, so we can use it later in the process.
    */
-  protected function addImages(PdfPage $pdfPage, Page $exportPage): void {
+  protected function addImages(PdfPage $pdfPage, Page $importPage): void {
     foreach ($pdfPage->getXObjects() as $xObject) {
       if (!$xObject instanceof XObjectImage) {
         continue;
@@ -241,7 +242,7 @@ class SmalotPdfParserExtract extends ExtractPluginBase implements ContainerFacto
       $image->setColorSpace($colorSpace);
       $image->setFilter($filter);
       $image->setxObjectDataFile($dataFile);
-      $exportPage->addImage($image);
+      $importPage->addImage($image);
     }
   }
 
@@ -251,7 +252,7 @@ class SmalotPdfParserExtract extends ExtractPluginBase implements ContainerFacto
    * This looks for link annotations in the PDF page content, and works them
    * into the content of the page.
    */
-  protected function addLinks(PdfPage $pdfPage, Page $exportPage): void {
+  protected function addLinks(PdfPage $pdfPage, Page $importPage): void {
     $search = [];
     $replace = [];
     foreach ($this->getAnnotations($pdfPage) as $annotation) {
@@ -270,6 +271,9 @@ class SmalotPdfParserExtract extends ExtractPluginBase implements ContainerFacto
 
       $action = $annotation->get('A');
       if ($action instanceof PDFObject) {
+        $uri = (string) $action->get('URI');
+      }
+      if ($action instanceof Header) {
         $uri = (string) $action->get('URI');
       }
 
@@ -298,8 +302,8 @@ class SmalotPdfParserExtract extends ExtractPluginBase implements ContainerFacto
         return $text[1];
       }, $texts);
 
-      $linkText = implode(' ', $textSearch);
-      if ($linkText) {
+      $linkText = $this->buildLinkText($textSearch);
+      if ($linkText !== '') {
         // @todo Check the return value here and do individual replacements.
         // (if we can't match the entire string). This will need to be careful
         // about strings like "-" showing up. Check for a minimum length?
@@ -311,7 +315,10 @@ class SmalotPdfParserExtract extends ExtractPluginBase implements ContainerFacto
     }
 
     if (count($search) > 0) {
-      $this->replaceContent($exportPage, $search, $replace);
+      if ($this->replaceContent($importPage, $search, $replace) === 0) {
+        // If zero replacements were made, log the failure:
+        $this->getLogger('localgov_publications_importer')->debug("Couldn't find text '{$search}' on page {$importPage->getPageNumber()} of {$importPage->getTitle()}");
+      }
     }
   }
 
@@ -356,12 +363,30 @@ class SmalotPdfParserExtract extends ExtractPluginBase implements ContainerFacto
    * @return bool
    *   If at least one replacement was made.
    */
-  protected function replaceContent(Page $exportPage, array $search, array $replace): bool {
-    $text = $exportPage->getContent();
+  protected function replaceContent(Page $importPage, array $search, array $replace): bool {
+    $text = $importPage->getContent();
     $text = str_replace($search, $replace, $text, $count);
-    $exportPage->setContent($text);
+    $importPage->setContent($text);
 
     return $count > 0;
+  }
+
+  /**
+   * Combines text search results into a string to search for.
+   */
+  protected function buildLinkText(array $textSearch): string {
+
+    if (empty($textSearch)) {
+      return '';
+    }
+
+    // Join all the text together.
+    $linkText = implode('', $textSearch);
+
+    // Trim any spaces off the start and end.
+    $linkText = trim($linkText);
+
+    return $linkText;
   }
 
 }

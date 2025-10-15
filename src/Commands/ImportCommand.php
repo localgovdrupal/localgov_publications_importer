@@ -22,7 +22,6 @@ class ImportCommand extends DrushCommands {
   public function import(): void {
 
     // @todo Move all this into a service.
-
     // Get the Import entity with the lowest creation time that's still pending.
     $entityTypeManager = \Drupal::entityTypeManager();
     $importStorage = $entityTypeManager->getStorage('import');
@@ -48,7 +47,6 @@ class ImportCommand extends DrushCommands {
       // We could pass the import entity to the importer service here? We don't
       // really need to do a batch, I don't think, but it keeps things consistent
       // with running it in the UI.
-
       $file = $import->getFile();
 
       $batch = new BatchBuilder();
@@ -88,22 +86,22 @@ class ImportCommand extends DrushCommands {
   }
 
   /**
-   * Resets the status of a given import so it can be reimported.
+   * Resets the status of a given import, so it can be reimported.
    *
    * @command localgov_publications_importer:reset
-   * @param int $import_id
-   *   The id of the import to reset
    * @aliases lpir
+   *
+   * @param int $import_id
+   *   The id of the import to reset.
    */
   public function reset(int $import_id): void {
 
     // @todo Move all this into a service.
-
     // Get the Import entity with the lowest creation time that's still pending.
     $entityTypeManager = \Drupal::entityTypeManager();
     $importStorage = $entityTypeManager->getStorage('import');
 
-    /** @var ImportInterface $import */
+    /** @var \Drupal\localgov_publications_importer\ImportInterface $import */
     $import = $importStorage->load($import_id);
 
     if ($import instanceof ImportInterface) {

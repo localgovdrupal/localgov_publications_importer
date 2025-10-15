@@ -239,15 +239,15 @@ Example format:
     // "I'll format the provided text into valid JSON with multiple pages:"
     // Or even: "[This is the JSON output that represents the formatted content
     // from the document.]".
-
-    // Remove any pairs of square brackets and their contents, if their contents
-    // does not contain a curly brace. This is either the AI's intro message
-    // contained in [] (why, Claude? Why??), or an empty result set, which we
-    // can't do anything with anyway.
+    //
+    // First: Remove any pairs of square brackets and their contents, if their
+    // contents does not contain a curly brace. This is either the AI's intro
+    // message contained in [] (why, Claude? Why??), or an empty result set,
+    // which we can't do anything with anyway.
     $aiResponseText = preg_replace('/\[[^{}\[\]]+\]/', '', $aiResponseText);
 
-    // Look for the start and end of the JSON encoded array of objects, and trim
-    // off anything outside it.
+    // Next, Look for the start and end of the JSON encoded array of objects,
+    // and trim off anything outside it.
     $json_start = strpos($aiResponseText, '[');
     $json_end = strrpos($aiResponseText, ']');
     if (is_int($json_start) && is_int($json_end)) {

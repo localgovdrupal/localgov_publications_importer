@@ -5,5 +5,6 @@ services:
       - { name: drush.command }
   localgov_publications_importer.pdf_import_commands:
     class: Drupal\localgov_publications_importer\Commands\ImportCommand
+    arguments: ['@entity_type.manager']
     tags:
       - { name: drush.command }

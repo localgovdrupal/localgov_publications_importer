@@ -3,6 +3,7 @@
 namespace Drupal\localgov_publications_importer\Commands;
 
 use Drupal\Core\Batch\BatchBuilder;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\localgov_publications_importer\Batch;
 use Drupal\localgov_publications_importer\Entity\Import;
 use Drupal\localgov_publications_importer\ImportInterface;
@@ -14,6 +15,15 @@ use Drush\Commands\DrushCommands;
 class ImportCommand extends DrushCommands {
 
   /**
+   * Constructor.
+   */
+  public function __construct(
+    protected EntityTypeManagerInterface $entityTypeManager,
+  ) {
+    parent::__construct();
+  }
+
+  /**
    * Analyzes a PDF file and prints the object names found in it.
    *
    * @command localgov_publications_importer:import
@@ -23,8 +33,7 @@ class ImportCommand extends DrushCommands {
 
     // @todo Move all this into a service.
     // Get the Import entity with the lowest creation time that's still pending.
-    $entityTypeManager = \Drupal::entityTypeManager();
-    $importStorage = $entityTypeManager->getStorage('import');
+    $importStorage = $this->entityTypeManager->getStorage('import');
     $query = $importStorage->getQuery();
 
     $result = $query
@@ -39,7 +48,7 @@ class ImportCommand extends DrushCommands {
       return;
     }
 
-    /** @var Import $import */
+    /** @var \Drupal\localgov_publications_importer\ImportInterface $import */
     $import = $importStorage->load(reset($result));
 
     try {
@@ -98,12 +107,9 @@ class ImportCommand extends DrushCommands {
 
     // @todo Move all this into a service.
     // Get the Import entity with the lowest creation time that's still pending.
-    $entityTypeManager = \Drupal::entityTypeManager();
-    $importStorage = $entityTypeManager->getStorage('import');
+    $importStorage = $this->entityTypeManager->getStorage('import');
 
-    /** @var \Drupal\localgov_publications_importer\ImportInterface $import */
     $import = $importStorage->load($import_id);
-
     if ($import instanceof ImportInterface) {
       $import->setStatus(Import::STATUS_PENDING);
       $import->setPages([]);

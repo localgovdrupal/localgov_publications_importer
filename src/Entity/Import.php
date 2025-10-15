@@ -7,7 +7,9 @@ use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\file\Entity\File;
+use Drupal\localgov_publications_importer\Image;
 use Drupal\localgov_publications_importer\ImportInterface;
+use Drupal\localgov_publications_importer\Page;
 use Drupal\localgov_publications_importer\PageInterface;
 use Drupal\node\NodeInterface;
 
@@ -75,7 +77,7 @@ class Import extends ContentEntityBase implements ImportInterface {
    */
   public function getPages(): array {
     $serialized = $this->get('pages')->value;
-    return $serialized ? unserialize($serialized) : [];
+    return $serialized ? unserialize($serialized, ['allowed_classes' => [Page::class, Image::class]]) : [];
   }
 
   /**

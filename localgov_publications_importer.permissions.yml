@@ -5,8 +5,8 @@ administer imports:
   title: 'Administer imports'
   description: 'Allows full control over imports.'
 access imports:
-    title: 'Access imports'
-    description: 'Allows viewing of imports.'
+  title: 'Access imports'
+  description: 'Allows viewing of imports.'
 delete own imports:
   title: 'Delete own imports'
   description: 'Allows users to delete imports that they started.'

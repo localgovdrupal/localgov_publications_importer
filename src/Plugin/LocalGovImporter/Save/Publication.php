@@ -5,7 +5,6 @@ namespace Drupal\localgov_publications_importer\Plugin\LocalGovImporter\Save;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\localgov_publications_importer\Attribute\Save;
 use Drupal\localgov_publications_importer\ImportInterface;
-use Drupal\media\Entity\Media;
 use Drupal\node\NodeInterface;
 use Drupal\paragraphs\Entity\Paragraph;
 

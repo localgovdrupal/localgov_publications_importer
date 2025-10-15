@@ -197,18 +197,21 @@ class Image {
 
   /**
    * Set the path to the file containing the xObject data.
-   *
-   * @param string $xObjectDataFile
-   *   The file path to set.
    */
   public function setxObjectDataFile(string $xObjectDataFile): void {
     $this->xObjectDataFile = $xObjectDataFile;
   }
 
+  /**
+   * Set the ID of media using this image.
+   */
   public function setMediaId(int $mediaId): void {
     $this->mediaId = $mediaId;
   }
 
+  /**
+   * Get the ID of media using this image.
+   */
   public function getMediaId(): ?int {
     return $this->mediaId;
   }
@@ -217,8 +220,6 @@ class Image {
    * Gets a placeholder for the image that we can insert into content.
    *
    * The placeholder will later be replaced with the real image.
-   *
-   * @return string
    */
   public function toPlaceHolder(): string {
     $bits = explode('/', $this->xObjectDataFile);
@@ -235,4 +236,5 @@ class Image {
     }
     return 'png';
   }
+
 }

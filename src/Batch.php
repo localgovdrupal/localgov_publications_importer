@@ -63,7 +63,6 @@ class Batch {
       $context['finished'] = $completedSteps / $totalSteps;
     }
 
-
     // Do this one step at a time by limiting the loop using the sandbox.
     // @todo Ask the plugin at this point if it wants to work page by page.
     // Then if not we could just do one call.

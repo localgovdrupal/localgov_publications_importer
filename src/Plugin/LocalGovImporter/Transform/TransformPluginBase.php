@@ -17,8 +17,9 @@ use Drupal\localgov_publications_importer\Plugin\TransformInterface;
 abstract class TransformPluginBase extends PluginBase implements TransformInterface {
 
   /**
-   * @var ImportInterface
-   *   The import being worked on.
+   * The import being worked on.
+   *
+   * @var \Drupal\localgov_publications_importer\ImportInterface
    */
   protected $import;
 

@@ -4,6 +4,7 @@ namespace Drupal\localgov_publications_importer\Entity;
 
 use Drupal\Core\Entity\ContentEntityBase;
 use Drupal\Core\Entity\EntityTypeInterface;
+use Drupal\user\UserInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\file\Entity\File;
@@ -150,14 +151,14 @@ class Import extends ContentEntityBase implements ImportInterface {
   /**
    * Get the creator user.
    */
-  public function getCreator() {
+  public function getCreator(): ?UserInterface {
     return $this->get('creator')->entity;
   }
 
   /**
    * Set the creator user.
    */
-  public function setCreator($user): void {
+  public function setCreator(UserInterface $user): void {
     $this->set('creator', $user);
   }
 

@@ -2,14 +2,14 @@
 
 namespace Drupal\localgov_publications_importer_ai\Plugin\LocalGovImporter\Transform;
 
-use Drupal\ai\Plugin\ProviderProxy;
+use Drupal\Core\Logger\LoggerChannelTrait;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\ai\AiProviderPluginManager;
 use Drupal\ai\Exception\AiRequestErrorException;
 use Drupal\ai\OperationType\Chat\ChatInput;
 use Drupal\ai\OperationType\Chat\ChatMessage;
-use Drupal\ai_provider_aws_bedrock\Decorator\BedrockJsonSerializeDecorator;
+use Drupal\ai\Plugin\ProviderProxy;
 use Drupal\localgov_publications_importer\Attribute\Transform;
 use Drupal\localgov_publications_importer\Exception\RetryableTransformFailure;
 use Drupal\localgov_publications_importer\ImportInterface;
@@ -26,6 +26,8 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
   description: new TranslatableMarkup('Uses AI to reintroduce missing document structure. Sends the entire document in one request to the AI.')
 )]
 class AiAllInOne extends TransformPluginBase implements ContainerFactoryPluginInterface {
+
+  use LoggerChannelTrait;
 
   /**
    * The default AI prompt to use for transforming content.
@@ -146,10 +148,12 @@ Example format:
       $rawOutput = $chatOutput->getRawOutput();
 
       // We only know how to handle this for bedrock at the moment.
-      if ($rawOutput instanceof BedrockJsonSerializeDecorator) {
-        $rawJson = $rawOutput->jsonSerialize();
-        if ($rawJson['stopReason'] === 'max_tokens') {
-          \Drupal::logger('localgov_publications_importer')->error("Hit maximum output token limit when generating content.");
+      if ($provider->getPluginId() === 'bedrock') {
+        if ($rawOutput instanceof \JsonSerializable) {
+          $rawJson = $rawOutput->jsonSerialize();
+          if ($rawJson['stopReason'] === 'max_tokens') {
+            $this->getLogger('localgov_publications_importer')->error("Hit maximum output token limit when generating content.");
+          }
         }
       }
     }
@@ -165,7 +169,7 @@ Example format:
 
     if ($aiResponse === NULL) {
       // Decoding the response failed.
-      \Drupal::logger('localgov_publications_importer')->error("Couldn't decode JSON response: " . json_last_error_msg());
+      $this->getLogger('localgov_publications_importer')->error("Couldn't decode JSON response: " . json_last_error_msg());
       return;
     }
 

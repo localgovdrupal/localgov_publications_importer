@@ -24,16 +24,17 @@ class AiPreRequestEventSubscriber implements EventSubscriberInterface {
    */
   public function aiPreRequest(PreGenerateResponseEvent $event) {
 
-    // @todo Limit this to our own requests, somehow.
-    $configuration = $event->getConfiguration();
+    if ($event->getProviderId() === 'bedrock' && str_contains($event->getModelId(), 'anthropic.claude')) {
+      // This is the maximum permitted token limit, and configuration option for
+      // anthropic.claude-3-7-sonnet-20250219-v1:0 via AWS Bedrock.
+      // @todo Handle other providers/models.
+      $claude_max_tokens = 131071;
 
-    // This is the maximum permitted token limit, and configuration option for
-    // anthropic.claude-3-7-sonnet-20250219-v1:0 via AWS Bedrock.
-    // @todo Handle other providers/models.
-    $claude_max_tokens = 131071;
-    $configuration['maxTokens'] = $claude_max_tokens;
-
-    $event->setConfiguration($configuration);
+      // @todo Limit this to our own requests, somehow.
+      $configuration = $event->getConfiguration();
+      $configuration['maxTokens'] = $claude_max_tokens;
+      $event->setConfiguration($configuration);
+    }
   }
 
 }

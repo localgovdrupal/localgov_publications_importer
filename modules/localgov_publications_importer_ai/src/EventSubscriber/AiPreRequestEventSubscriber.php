@@ -22,7 +22,7 @@ class AiPreRequestEventSubscriber implements EventSubscriberInterface {
   /**
    * Alter the AI request configuration before it's sent.
    */
-  public function aiPreRequest(PreGenerateResponseEvent $event) {
+  public function aiPreRequest(PreGenerateResponseEvent $event): void {
 
     if ($event->getProviderId() === 'bedrock' && str_contains($event->getModelId(), 'anthropic.claude')) {
       // This is the maximum permitted token limit, and configuration option for

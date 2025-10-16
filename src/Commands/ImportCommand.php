@@ -8,11 +8,14 @@ use Drupal\localgov_publications_importer\Batch;
 use Drupal\localgov_publications_importer\Entity\Import;
 use Drupal\localgov_publications_importer\ImportInterface;
 use Drush\Commands\DrushCommands;
+use Drupal\Core\Logger\LoggerChannelTrait;
 
 /**
  * Drush commands for PDF import.
  */
 class ImportCommand extends DrushCommands {
+
+  use LoggerChannelTrait;
 
   /**
    * Constructor.
@@ -54,8 +57,8 @@ class ImportCommand extends DrushCommands {
     try {
       // Build a batch to do the import.
       // We could pass the import entity to the importer service here? We don't
-      // really need to do a batch, I don't think, but it keeps things consistent
-      // with running it in the UI.
+      // really need to do a batch, I don't think, but it keeps things
+      // consistent with running it in the UI.
       $file = $import->getFile();
 
       $batch = new BatchBuilder();
@@ -79,7 +82,7 @@ class ImportCommand extends DrushCommands {
     }
     catch (\Throwable $e) {
 
-      \Drupal::logger('localgov_publications_importer')->error($e->getMessage(), ['exception' => $e]);
+      $this->getLogger('localgov_publications_importer')->error($e->getMessage(), ['exception' => $e]);
 
       // @todo Log the error.
       $import = $importStorage->load($import->id());
@@ -97,11 +100,11 @@ class ImportCommand extends DrushCommands {
   /**
    * Resets the status of a given import, so it can be reimported.
    *
-   * @command localgov_publications_importer:reset
-   * @aliases lpir
-   *
    * @param int $import_id
    *   The id of the import to reset.
+   *
+   * @command localgov_publications_importer:reset
+   * @aliases lpir
    */
   public function reset(int $import_id): void {
 

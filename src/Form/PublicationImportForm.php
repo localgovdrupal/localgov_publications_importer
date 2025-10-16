@@ -9,7 +9,6 @@ use Drupal\Core\Link;
 use Drupal\Core\Url;
 use Drupal\localgov_publications_importer\Entity\Import;
 use Drupal\localgov_publications_importer\Service\Importer as PublicationImporter;
-use Drupal\user\Entity\User;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**

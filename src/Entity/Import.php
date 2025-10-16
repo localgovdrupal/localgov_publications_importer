@@ -126,7 +126,7 @@ class Import extends ContentEntityBase implements ImportInterface {
     $this->set('status', $status);
   }
 
-  /*
+  /**
    * Set the result of the import.
    */
   public function setResult(NodeInterface $node) {

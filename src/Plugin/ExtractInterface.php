@@ -12,16 +12,6 @@ use Drupal\localgov_publications_importer\ImportInterface;
 interface ExtractInterface {
 
   /**
-   * Accepts a file.
-   *
-   * @param string $pathToFile
-   *   Path to the file.
-   *
-   * @return $this
-   */
-  public function setSource(string $pathToFile): self;
-
-  /**
    * Extracts content from the file attached to the import entity.
    *
    * @return ?\Drupal\localgov_publications_importer\ImportInterface

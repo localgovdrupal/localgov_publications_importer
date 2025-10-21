@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\localgov_publications_importer\Functional;
 
+use Drupal\Core\File\FileSystemInterface;
 use Drupal\Tests\BrowserTestBase;
 use Drupal\file\Entity\File;
 use Drupal\localgov_publications_importer\Entity\Import;

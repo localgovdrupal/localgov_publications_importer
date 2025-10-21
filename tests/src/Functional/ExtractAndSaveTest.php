@@ -2,9 +2,11 @@
 
 namespace Drupal\Tests\localgov_publications_importer\Functional;
 
-use Drupal\node\NodeInterface;
 use Drupal\Tests\BrowserTestBase;
+use Drupal\file\Entity\File;
+use Drupal\localgov_publications_importer\Entity\Import;
 use Drupal\localgov_publications_importer\ImportInterface;
+use Drupal\node\NodeInterface;
 
 /**
  * Tests our default extract and save plugins.
@@ -91,7 +93,33 @@ class ExtractAndSaveTest extends BrowserTestBase {
     $extractPlugin = $this->extractManager->createInstance('smalot_pdfparser');
     $savePlugin = $this->saveManager->createInstance('save_publication');
 
-    $import = $extractPlugin->setSource(self::dataDir() . $fileName)->getImport();
+    $directory = 'public://';
+    $location = $directory . '/' . basename($fileName);
+
+    /** @var \Drupal\Core\File\FileSystemInterface $file_system */
+    $file_system = \Drupal::service('file_system');
+    $file_system->prepareDirectory($directory, FileSystemInterface:: CREATE_DIRECTORY | FileSystemInterface::MODIFY_PERMISSIONS);
+    $file_system->copy($fileName, $location, FileSystemInterface::EXISTS_REPLACE);
+
+    $file = File::create([
+      'filename' => basename($fileName),
+      'uri' => $location,
+      'status' => 1,
+      'uid' => 1,
+    ]);
+    $file->save();
+
+    $import = Import::create([
+      'file' => $file,
+      'title' => $file->getFilename(),
+      // We may not need these.
+      'creator' => null,
+      'pipeline' => '',
+    ]);
+
+    $import->save();
+
+    $import = $extractPlugin->extract($import);
     $this->assertInstanceOf(ImportInterface::class, $import, "SmalotPdfParserExtract::getImport() failed on file: {$fileName}");
 
     $node = $savePlugin->import($import);

@@ -143,13 +143,6 @@ display:
             tooltip:
               date_format: long
               custom_date_format: ''
-            time_diff:
-              enabled: false
-              future_format: '@interval hence'
-              past_format: '@interval ago'
-              granularity: 2
-              refresh: 60
-              description: ''
           group_column: value
           group_columns: {  }
           group_rows: true
@@ -213,9 +206,6 @@ display:
           hide_alter_empty: true
           click_sort_column: value
           type: import_status
-          settings:
-            thousand_separator: ''
-            prefix_suffix: 0
           group_column: value
           group_columns: {  }
           group_rows: true
@@ -521,10 +511,6 @@ display:
     display_plugin: page
     position: 1
     display_options:
-      display_extenders:
-        localgov_page_header_display_extender:
-          lede: ''
-          tokenize: false
       path: admin/content/imports
       menu:
         type: tab

@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\localgov_publications_importer\Functional;
 
+use Drupal\Core\File\FileExists;
 use Drupal\Core\File\FileSystemInterface;
 use Drupal\Tests\BrowserTestBase;
 use Drupal\file\Entity\File;
@@ -100,7 +101,7 @@ class ExtractAndSaveTest extends BrowserTestBase {
     /** @var \Drupal\Core\File\FileSystemInterface $file_system */
     $file_system = \Drupal::service('file_system');
     $file_system->prepareDirectory($directory, FileSystemInterface:: CREATE_DIRECTORY | FileSystemInterface::MODIFY_PERMISSIONS);
-    $file_system->copy($fileName, $location, FileSystemInterface::EXISTS_REPLACE);
+    $file_system->copy($fileName, $location, FileExists::Replace);
 
     $file = File::create([
       'filename' => basename($fileName),

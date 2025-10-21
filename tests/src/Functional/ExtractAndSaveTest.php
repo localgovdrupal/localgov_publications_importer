@@ -78,7 +78,7 @@ class ExtractAndSaveTest extends BrowserTestBase {
           if (str_starts_with($name, '.')) {
             continue;
           }
-          $rtn[] = [$dirname . '/' . $name];
+          $rtn[] = [$dataDir . '/' . $dirname . '/' . $name];
         }
       }
     }
@@ -96,16 +96,16 @@ class ExtractAndSaveTest extends BrowserTestBase {
     $savePlugin = $this->saveManager->createInstance('save_publication');
 
     $directory = 'public://';
-    $location = $directory . '/' . basename($fileName);
+    $targetLocation = $directory . '/' . basename($fileName);
 
     /** @var \Drupal\Core\File\FileSystemInterface $file_system */
     $file_system = \Drupal::service('file_system');
     $file_system->prepareDirectory($directory, FileSystemInterface:: CREATE_DIRECTORY | FileSystemInterface::MODIFY_PERMISSIONS);
-    $file_system->copy($fileName, $location, FileExists::Replace);
+    $file_system->copy($fileName, $targetLocation, FileExists::Replace);
 
     $file = File::create([
       'filename' => basename($fileName),
-      'uri' => $location,
+      'uri' => $targetLocation,
       'status' => 1,
       'uid' => 1,
     ]);

@@ -7,7 +7,6 @@ use Drupal\Core\File\FileSystemInterface;
 use Drupal\Tests\BrowserTestBase;
 use Drupal\file\Entity\File;
 use Drupal\localgov_publications_importer\Entity\Import;
-use Drupal\localgov_publications_importer\ImportInterface;
 use Drupal\node\NodeInterface;
 
 /**

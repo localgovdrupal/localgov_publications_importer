@@ -10,7 +10,6 @@ use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\localgov_publications_importer\Attribute\Extract;
 use Drupal\localgov_publications_importer\Image;
-use Drupal\localgov_publications_importer\Entity\Import;
 use Drupal\localgov_publications_importer\ImportInterface;
 use Drupal\localgov_publications_importer\Page;
 use Smalot\PdfParser\Config as PdfParserConfig;
@@ -131,7 +130,7 @@ class SmalotPdfParserExtract extends ExtractPluginBase implements ContainerFacto
   /**
    * Set the title of an import from the parsed PDF.
    */
-  protected function setTitle(Import $import, Document $pdf): void {
+  protected function setTitle(ImportInterface $import, Document $pdf): void {
     $details = $pdf->getDetails();
 
     $title = NULL;

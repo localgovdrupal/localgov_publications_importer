@@ -114,8 +114,10 @@ class ExtractAndSaveTest extends BrowserTestBase {
 
     $import->save();
 
-    $import = $extractPlugin->extract($import);
-    $this->assertInstanceOf(ImportInterface::class, $import, "SmalotPdfParserExtract::getImport() failed on file: {$fileName}");
+    $extractPlugin->extract($import);
+
+    $this->assertNotEquals('', $import->getTitle(), "Check title has been populated.");
+    $this->assertNotEquals(0, count($import->getPages()), "Check pages have been populated.");
 
     $node = $savePlugin->import($import);
     $this->assertInstanceOf(NodeInterface::class, $node);

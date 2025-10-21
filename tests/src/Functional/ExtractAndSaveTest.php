@@ -113,7 +113,7 @@ class ExtractAndSaveTest extends BrowserTestBase {
       'file' => $file,
       'title' => $file->getFilename(),
       // We may not need these.
-      'creator' => null,
+      'creator' => NULL,
       'pipeline' => '',
     ]);
 

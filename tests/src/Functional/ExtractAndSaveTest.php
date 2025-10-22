@@ -67,7 +67,8 @@ class ExtractAndSaveTest extends BrowserTestBase {
       $rtn[] = [
         $dataDir . '/' . $file['filename'],
         $file['title'],
-        $file['page_count']];
+        $file['page_count']
+      ];
     }
     return $rtn;
   }

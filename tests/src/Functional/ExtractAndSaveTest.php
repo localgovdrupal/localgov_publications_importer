@@ -59,20 +59,15 @@ class ExtractAndSaveTest extends BrowserTestBase {
     // This is because it's quite big, and we don't want to install it in
     // everyone's sites.
     $dataDir = dirname(__FILE__) . "/../../../../localgov_publications_importer_test_data/data";
+
+    $files = json_decode(file_get_contents($dataDir . '/manifest.json'), TRUE);
+
     $rtn = [];
-    foreach (scandir($dataDir) as $dirname) {
-      if (str_starts_with($dirname, '.')) {
-        continue;
-      }
-      // Look one level down for files.
-      if (is_dir($dataDir . '/' . $dirname)) {
-        foreach (scandir($dataDir . '/' . $dirname) as $name) {
-          if (str_starts_with($name, '.')) {
-            continue;
-          }
-          $rtn[] = [$dataDir . '/' . $dirname . '/' . $name];
-        }
-      }
+    foreach ($files as $file) {
+      $rtn[] = [
+        $dataDir . '/' . $file['filename'],
+        $file['title'],
+        $file['page_count']];
     }
     return $rtn;
   }
@@ -82,7 +77,7 @@ class ExtractAndSaveTest extends BrowserTestBase {
    *
    * @dataProvider fileProvider
    */
-  public function testGetImportReturnsImportInterface($fileName): void {
+  public function testGetImportReturnsImportInterface($fileName, $title, $pageCount): void {
 
     $extractPlugin = $this->extractManager->createInstance('smalot_pdfparser');
     $savePlugin = $this->saveManager->createInstance('save_publication');
@@ -115,8 +110,8 @@ class ExtractAndSaveTest extends BrowserTestBase {
 
     $extractPlugin->extract($import);
 
-    $this->assertNotEquals('', $import->getTitle(), "Check title has been populated.");
-    $this->assertNotEquals(0, count($import->getPages()), "Check pages have been populated.");
+    $this->assertEquals($title, $import->getTitle(), "Check title has been populated.");
+    $this->assertEquals($pageCount, count($import->getPages()), "Check pages have been populated.");
 
     $node = $savePlugin->import($import);
     $this->assertInstanceOf(NodeInterface::class, $node);

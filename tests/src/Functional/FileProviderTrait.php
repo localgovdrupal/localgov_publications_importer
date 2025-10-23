@@ -5,6 +5,7 @@ namespace Drupal\Tests\localgov_publications_importer\Functional;
 use Drupal\Core\File\FileExists;
 use Drupal\file\Entity\File;
 use Drupal\localgov_publications_importer\Entity\Import;
+use Drupal\localgov_publications_importer\ImportInterface;
 
 /**
  * Common methods to read test metadata and set up imports.
@@ -48,7 +49,7 @@ trait FileProviderTrait {
   /**
    * Build an import from a filename.
    */
-  public function createImport($fileName) {
+  public function createImport($fileName): ImportInterface {
     $directory = 'public://';
     $targetLocation = $directory . '/' . basename($fileName);
 

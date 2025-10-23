@@ -12,13 +12,21 @@ You can fund the development of this feature via the [LocalGov Drupal Community 
 ## How to try this out
 
 1) Enable the module.
-2) Choose "Content" -> "Import Publication" from the admin menu.
+2) Choose "Content" -> "Imports" from the admin menu.
+3) Click the "Import Publication" button in the top right.
 3) Upload a PDF file to the form and submit it.
-4) After a few seconds, you'll get redirected to a new HTML Publication created from the supplied PDF.
+4) You'll be redirected back to the import screen on submission, and be able to see your uploaded file as a new import.
+5) When cron next runs on the site, you'll see the import change status to "Processing". Once done, the status changes to "Completed" and a link to the resulting publication will show in the "Result" column.
+
+## Import pipelines
+
+The configuraton of the import process is known as an "import pipeline" and can be administered by users with the permission to do so. 
+Multiple import pipelines can be created, and users can choose between them when a new import is created. 
+This allows the ability to import content in different ways - for example, using different plugins or different AI prompts.
 
 ## Using AI to format the imported PDF
 
-If you'd like to use AI to clean up the text, you can. A submodule, localgov_publications_importer_ai, is included. To enable this module you will need to install the [Drupal AI module](https://www.drupal.org/project/ai) and at least one [AI provider module](https://www.drupal.org/project/ai#:~:text=complete%20AI%20applications.-,AI%20Providers,-In%20order%20to). The default AI chat provider will be used if one is configured. In the steps below will illustrate how to configure one using ChatGPT. Similar steps can be used with other AI LLM providers:
+If you'd like to use AI to clean up or transform the text, you can. A submodule, localgov_publications_importer_ai, is included. To enable this module you will need to install the [Drupal AI module](https://www.drupal.org/project/ai) and at least one [AI provider module](https://www.drupal.org/project/ai#:~:text=complete%20AI%20applications.-,AI%20Providers,-In%20order%20to). The default AI chat provider will be used if one is configured. In the steps below will illustrate how to configure one using ChatGPT. Similar steps can be used with other AI LLM providers:
 
 1) Enable the localgov_publications_importer_ai submodule.
 2) Download and install the [Open AI provider](https://www.drupal.org/project/ai_provider_openai) module.

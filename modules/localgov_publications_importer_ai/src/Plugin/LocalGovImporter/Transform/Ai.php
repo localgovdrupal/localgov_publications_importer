@@ -30,7 +30,7 @@ class Ai extends TransformPluginBase implements ContainerFactoryPluginInterface 
    *
    * This can be overridden by the plugin's configuration.
    */
-  protected string $prompt = 'This plain text document has been stripped of its formatting. Add the formatting back in, and give me the whole document back as valid HTML.';
+  protected string $prompt = 'You are a website content editor. Your task is to format the plain text the user will provide for you with appropriate HTML markup. Do not rewrite or edit the text content of the document, the text content must be returned exactly as is. Only return HTML markup that would be valid for pasting inside a website CMS text editor, do not include markdown style backticks. Only return the marked up HTML. Use the first line as a <h1> if it makes sense as a complete sentence, mark up the remainder of the text using only the html tags <h2>, <h3>, <h4>, <h5>, <h6>, <p>, <ul>, <ol>, <li>. Keep headings in sequence and be consistent.';
 
   /**
    * {@inheritdoc}

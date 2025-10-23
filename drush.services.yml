@@ -1,0 +1,10 @@
+services:
+  localgov_publications_importer.pdf_analyse_command:
+    class: Drupal\localgov_publications_importer\Commands\AnalyseCommand
+    tags:
+      - { name: drush.command }
+  localgov_publications_importer.pdf_import_commands:
+    class: Drupal\localgov_publications_importer\Commands\ImportCommand
+    arguments: ['@entity_type.manager']
+    tags:
+      - { name: drush.command }

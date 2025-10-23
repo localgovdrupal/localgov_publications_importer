@@ -59,6 +59,13 @@ class Image {
   protected ?int $fileId = NULL;
 
   /**
+   * Stores the ID of a media entity, once this image has been imported as one.
+   *
+   * @var int
+   */
+  protected ?int $mediaId = NULL;
+
+  /**
    * Get the file ID, if this image has been imported.
    *
    * @return int|null
@@ -190,12 +197,44 @@ class Image {
 
   /**
    * Set the path to the file containing the xObject data.
-   *
-   * @param string $xObjectDataFile
-   *   The file path to set.
    */
   public function setxObjectDataFile(string $xObjectDataFile): void {
     $this->xObjectDataFile = $xObjectDataFile;
+  }
+
+  /**
+   * Set the ID of media using this image.
+   */
+  public function setMediaId(int $mediaId): void {
+    $this->mediaId = $mediaId;
+  }
+
+  /**
+   * Get the ID of media using this image.
+   */
+  public function getMediaId(): ?int {
+    return $this->mediaId;
+  }
+
+  /**
+   * Gets a placeholder for the image that we can insert into content.
+   *
+   * The placeholder will later be replaced with the real image.
+   */
+  public function toPlaceHolder(): string {
+    $bits = explode('/', $this->xObjectDataFile);
+    $uuid = array_pop($bits);
+    return "<img src=\"{$uuid}.{$this->fileExtension()}\">";
+  }
+
+  /**
+   * Figure out the file extension this image should have from its filter.
+   */
+  public function fileExtension(): string {
+    if ($this->filter === 'DCTDecode') {
+      return 'jpg';
+    }
+    return 'png';
   }
 
 }

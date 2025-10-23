@@ -18,13 +18,6 @@ interface TransformInterface extends PluginInspectionInterface {
   public function transform(ImportInterface $import, ?int $page = NULL): void;
 
   /**
-   * The order this plugin should run in.
-   *
-   * Low numbers will be run before higher numbers.
-   */
-  public function order(): int;
-
-  /**
    * Is this plugin configurable?
    *
    * If it's not, we won't show fields to configure it in the pipeline form.

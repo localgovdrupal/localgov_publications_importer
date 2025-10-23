@@ -2,13 +2,12 @@
 
 namespace Drupal\localgov_publications_importer\Form;
 
-use Drupal\Core\Batch\BatchBuilder;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Link;
 use Drupal\Core\Url;
-use Drupal\localgov_publications_importer\Batch;
+use Drupal\localgov_publications_importer\Entity\Import;
 use Drupal\localgov_publications_importer\Service\Importer as PublicationImporter;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -59,8 +58,7 @@ class PublicationImportForm extends FormBase {
       '#upload_validators' => [
         'file_validate_extensions' => ['pdf'],
       ],
-      // @todo Upload to private.
-      '#upload_location' => 'public://my_files/',
+      '#upload_location' => 'private://localgov_publications_importer/',
     ];
 
     $importPipelines = $this->entityTypeManager
@@ -107,18 +105,24 @@ class PublicationImportForm extends FormBase {
 
     $importPipelineId = $form_state->getValue('import_pipeline');
 
-    $batch = new BatchBuilder();
-    $batch->setTitle('Importing ' . $file->getFilename())
-      ->setFinishCallback([Batch::class, 'finished'])
-      ->setInitMessage('Commencing')
-      ->setProgressMessage('Importing. Elapsed time: @elapsed.')
-      ->setErrorMessage('An error occurred during import.');
+    $user = $this->entityTypeManager
+      ->getStorage('user')
+      ->load($this->currentUser()->id());
 
-    $batch->addOperation([Batch::class, 'extract'], [$importPipelineId, $file->getFileUri()]);
-    $batch->addOperation([Batch::class, 'transform'], [$importPipelineId]);
-    $batch->addOperation([Batch::class, 'save'], [$importPipelineId]);
+    $import = Import::create([
+      'file' => $file,
+      'title' => $file->getFilename(),
+      'creator' => $user,
+      'pipeline' => $importPipelineId,
+    ]);
 
-    batch_set($batch->toArray());
+    $import->save();
+
+    // Mark the file as permanent, so it doesn't get cleaned up prematurely.
+    $file->setPermanent();
+    $file->save();
+
+    $form_state->setRedirect('view.imports.page_1');
   }
 
 }

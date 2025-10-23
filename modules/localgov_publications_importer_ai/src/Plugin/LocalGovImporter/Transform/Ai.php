@@ -20,8 +20,8 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  */
 #[Transform(
   id: 'transform_ai',
-  label: new TranslatableMarkup('AI'),
-  description: new TranslatableMarkup('Uses AI to reintroduce missing document structure.')
+  label: new TranslatableMarkup('AI page by page'),
+  description: new TranslatableMarkup('Uses AI to reintroduce missing document structure. Sends the document to the AI one page at a time.')
 )]
 class Ai extends TransformPluginBase implements ContainerFactoryPluginInterface {
 

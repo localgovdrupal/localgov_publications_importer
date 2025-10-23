@@ -10,7 +10,6 @@ use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\localgov_publications_importer\Attribute\Extract;
 use Drupal\localgov_publications_importer\Image;
-use Drupal\localgov_publications_importer\Import;
 use Drupal\localgov_publications_importer\ImportInterface;
 use Drupal\localgov_publications_importer\Page;
 use Smalot\PdfParser\Config as PdfParserConfig;
@@ -18,6 +17,7 @@ use Smalot\PdfParser\Document;
 use Smalot\PdfParser\Element\ElementArray;
 use Smalot\PdfParser\Element\ElementName;
 use Smalot\PdfParser\Element\ElementXRef;
+use Smalot\PdfParser\Header;
 use Smalot\PdfParser\PDFObject;
 use Smalot\PdfParser\Page as PdfPage;
 use Smalot\PdfParser\Parser as PdfParser;
@@ -79,11 +79,9 @@ class SmalotPdfParserExtract extends ExtractPluginBase implements ContainerFacto
   /**
    * {@inheritDoc}
    */
-  public function getImport(): ?ImportInterface {
+  public function extract(ImportInterface $import): void {
 
-    $import = new Import($this->pathToFile);
-
-    $pdf = $this->parseFile();
+    $pdf = $this->parseFile($import->getFile()->getFileUri());
 
     $this->setTitle($import, $pdf);
 
@@ -114,7 +112,6 @@ class SmalotPdfParserExtract extends ExtractPluginBase implements ContainerFacto
 
       $import->addPage($page);
     }
-    return $import;
   }
 
   /**
@@ -126,6 +123,9 @@ class SmalotPdfParserExtract extends ExtractPluginBase implements ContainerFacto
     // It stops the text it's in being saved to the DB.
     $text = str_replace("\xD7", ' ', $text);
 
+    // This is in the "Unicode private range". We may need to remove all of it.
+    $text = str_replace("\uF0B7", ' ', $text);
+
     // Remove leading/trailing whitespace.
     return trim($text);
   }
@@ -133,7 +133,7 @@ class SmalotPdfParserExtract extends ExtractPluginBase implements ContainerFacto
   /**
    * Set the title of an import from the parsed PDF.
    */
-  protected function setTitle(Import $import, Document $pdf): void {
+  protected function setTitle(ImportInterface $import, Document $pdf): void {
     $details = $pdf->getDetails();
 
     $title = NULL;
@@ -166,18 +166,18 @@ class SmalotPdfParserExtract extends ExtractPluginBase implements ContainerFacto
 
     // Fall back to the filename if we can't find a title in the PDF.
     // This isn't ideal, but we need to have a title to save a node.
-    $import->setTitle(basename($this->pathToFile));
+    $import->setTitle(basename($import->getFile()->getFileUri()));
   }
 
   /**
    * Set up the parser and parse the file.
    */
-  protected function parseFile(): Document {
+  protected function parseFile(string $pathToFile): Document {
     $config = new PdfParserConfig();
     // An empty string can prevent words from breaking up.
     $config->setHorizontalOffset('');
     $parser = new PdfParser([], $config);
-    return $parser->parseFile($this->pathToFile);
+    return $parser->parseFile($pathToFile);
   }
 
   /**
@@ -186,7 +186,7 @@ class SmalotPdfParserExtract extends ExtractPluginBase implements ContainerFacto
    * The image content is written to a temp file, and the metadata is saved to
    * an object on the extract page, so we can use it later in the process.
    */
-  protected function addImages(PdfPage $pdfPage, Page $exportPage): void {
+  protected function addImages(PdfPage $pdfPage, Page $importPage): void {
     foreach ($pdfPage->getXObjects() as $xObject) {
       if (!$xObject instanceof XObjectImage) {
         continue;
@@ -244,7 +244,7 @@ class SmalotPdfParserExtract extends ExtractPluginBase implements ContainerFacto
       $image->setColorSpace($colorSpace);
       $image->setFilter($filter);
       $image->setxObjectDataFile($dataFile);
-      $exportPage->addImage($image);
+      $importPage->addImage($image);
     }
   }
 
@@ -254,16 +254,27 @@ class SmalotPdfParserExtract extends ExtractPluginBase implements ContainerFacto
    * This looks for link annotations in the PDF page content, and works them
    * into the content of the page.
    */
-  protected function addLinks(PdfPage $pdfPage, Page $exportPage): void {
+  protected function addLinks(PdfPage $pdfPage, Page $importPage): void {
     $search = [];
     $replace = [];
+
+    $annotations = [];
+
     foreach ($this->getAnnotations($pdfPage) as $annotation) {
 
       $subType = $annotation->get('Subtype')->getContent();
-      if ($subType !== 'Link') {
-        continue;
+      if ($subType == 'Link') {
+        $annotations[] = $annotation;
       }
+    }
 
+    if ($annotations === []) {
+      return;
+    }
+
+    $links = [];
+
+    foreach ($annotations as $annotation) {
       $rect = [];
       foreach ($annotation->get('Rect')->getRawContent() as $coordinate) {
         $rect[] = $coordinate->getContent();
@@ -275,22 +286,31 @@ class SmalotPdfParserExtract extends ExtractPluginBase implements ContainerFacto
       if ($action instanceof PDFObject) {
         $uri = (string) $action->get('URI');
       }
-
-      if (empty($uri)) {
-        continue;
+      if ($action instanceof Header) {
+        $uri = (string) $action->get('URI');
       }
 
+      if (!empty($uri)) {
+        $links[] = [
+          'uri' => $uri,
+          'rect' => $rect,
+        ];
+      }
+    }
+
+    foreach ($links as $i => $link) {
+
       // Rect = lower left x, lower left y, upper right x, upper right y.
-      [$llx, $lly, $urx, $ury] = $rect;
+      [$llx, $lly, $urx, $ury] = $link['rect'];
 
       // Look for text near the midpoint of the box.
       $textX = ($llx + $urx) / 2;
       $textY = ($lly + $ury) / 2;
 
       // Set the area to search to the dimensions of the box, plus a bit extra.
-      $extra = 1.9;
-      $xError = ($urx - $llx) / $extra;
-      $yError = ($ury - $lly) / $extra;
+      $extra = 0.5;
+      $xError = ($urx - $llx) * $extra;
+      $yError = ($ury - $lly) * $extra;
 
       // Can we find the text this annotation is around?
       $texts = $pdfPage->getTextXY($textX, $textY, $xError, $yError);
@@ -301,20 +321,60 @@ class SmalotPdfParserExtract extends ExtractPluginBase implements ContainerFacto
         return $text[1];
       }, $texts);
 
-      $linkText = implode(' ', $textSearch);
-      if ($linkText) {
-        // @todo Check the return value here and do individual replacements.
-        // (if we can't match the entire string). This will need to be careful
-        // about strings like "-" showing up. Check for a minimum length?
-        // Ideally, we should do this earlier when we're assembling the text
-        // array, then we still have the mapping of content to postition.
-        $search[] = $linkText;
-        $replace[] = "<a href=\"{$uri}\">{$linkText}</a>";
+      $linkText = $this->buildLinkText($textSearch);
+      if ($linkText === '') {
+        // Log this...
+        unset($links[$i]);
+      }
+      else {
+        $links[$i]['text'] = $linkText;
       }
     }
 
+    // Combine links where we can. This makes for more accurate search/replace.
+    $prevIndex = NULL;
+    foreach ($links as $index => $link) {
+
+      // Loop over all the links, comparing each with the one before it.
+      // They seem to be in page order.
+      if ($prevIndex === NULL) {
+        $prevIndex = $index;
+        continue;
+      }
+
+      // If two URLs in a row are the same, we can try to combine them.
+      // This happens when links go over a line break.
+      if ($links[$prevIndex]['uri'] === $links[$index]['uri']) {
+
+        // Build a regex to look for the combined text,
+        // with whitespace in between.
+        $chars = '/.^$*+-?()[]{}\|';
+        $combinedTextRegex = '/' . addcslashes($links[$prevIndex]['text'], $chars) . '\s+' . addcslashes($links[$index]['text'], $chars) . '/';
+
+        // If we find the combined text, use it as a replacement and remove the
+        // other identical link.
+        if ($combinedTextResult = $this->pageContains($importPage, $combinedTextRegex)) {
+          $links[$prevIndex]['text'] = $combinedTextResult;
+          unset($links[$index]);
+
+          // Set this to the previous, so that when it's moved on at the end of
+          // the loop, we end of looking at the previous index again.
+          $index = $prevIndex;
+        }
+      }
+      $prevIndex = $index;
+    }
+
+    foreach ($links as $link) {
+      $search[] = $link['text'];
+      $replace[] = "<a href=\"{$link['uri']}\">{$link['text']}</a>";
+    }
+
     if (count($search) > 0) {
-      $this->replaceContent($exportPage, $search, $replace);
+      if (!$this->replaceContent($importPage, $search, $replace)) {
+        // If zero replacements were made, log the failure:
+        $this->getLogger('localgov_publications_importer')->debug("Couldn't find text '{$search}' on page {$importPage->getPageNumber()} of {$importPage->getTitle()}");
+      }
     }
   }
 
@@ -359,12 +419,47 @@ class SmalotPdfParserExtract extends ExtractPluginBase implements ContainerFacto
    * @return bool
    *   If at least one replacement was made.
    */
-  protected function replaceContent(Page $exportPage, array $search, array $replace): bool {
-    $text = $exportPage->getContent();
+  protected function replaceContent(Page $importPage, array $search, array $replace): bool {
+    $text = $importPage->getContent();
     $text = str_replace($search, $replace, $text, $count);
-    $exportPage->setContent($text);
+    $importPage->setContent($text);
 
     return $count > 0;
+  }
+
+  /**
+   * Does the page contain this text?
+   *
+   * This could be a method on the page?
+   *
+   * @return ?string
+   *   The matched string, if a string matched.
+   */
+  protected function pageContains(Page $importPage, string $pattern): ?string {
+    if (preg_match($pattern, $importPage->getContent(), $matches)) {
+      return $matches[0];
+    }
+    return NULL;
+  }
+
+  /**
+   * Combines text search results into a string to search for.
+   */
+  protected function buildLinkText(array $textSearch): string {
+
+    if (empty($textSearch)) {
+      return '';
+    }
+
+    // Join all the text together.
+    $linkText = implode('', $textSearch);
+
+    // Trim any spaces off the start and end.
+    $linkText = trim($linkText);
+
+    $linkText = $this->cleanText($linkText);
+
+    return $linkText;
   }
 
 }

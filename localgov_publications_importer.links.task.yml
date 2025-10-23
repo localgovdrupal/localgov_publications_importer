@@ -1,5 +1,0 @@
-localgov_publications_importer.import:
-  route_name: localgov_publications_importer.import
-  title: 'Import Publication'
-  base_route: system.admin_content
-  weight: 90

@@ -2,6 +2,9 @@ services:
   localgov_publications_importer.importer:
     class: Drupal\localgov_publications_importer\Service\Importer
     arguments: ['@Drupal\localgov_publications_importer\ExtractOperationManager', '@Drupal\localgov_publications_importer\TransformOperationManager', '@Drupal\localgov_publications_importer\SaveOperationManager', '@entity_type.manager']
+  localgov_publications_importer.import_manager:
+    class: Drupal\localgov_publications_importer\Service\ImportManager
+    arguments: ['@entity_type.manager']
   plugin.manager.localgov_importer.extract:
     class: Drupal\localgov_publications_importer\ExtractOperationManager
     parent: default_plugin_manager

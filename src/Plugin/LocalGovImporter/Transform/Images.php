@@ -2,12 +2,14 @@
 
 namespace Drupal\localgov_publications_importer\Plugin\LocalGovImporter\Transform;
 
+use Drupal\Core\File\FileExists;
 use Drupal\Core\File\FileSystemInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\file\FileInterface;
 use Drupal\localgov_publications_importer\Attribute\Transform;
 use Drupal\localgov_publications_importer\PageInterface;
 use Drupal\localgov_publications_importer\Plugin\TransformInterface;
+use Drupal\media\Entity\Media;
 
 /**
  * Transform operation to change xObject raw data into image files.
@@ -40,17 +42,15 @@ class Images extends TransformPluginBase implements TransformInterface {
 
       $fileEntity = NULL;
 
+      $imageFileName = str_replace('temporary://', 'public://', $dataFileName) . '.' . $image->fileExtension();
+
       if ($filter === 'DCTDecode') {
         // DCTDecode objects are JPEGs. Write them to a file and use them.
-        $imageFileName = str_replace('temporary://', 'public://', $dataFileName) . '.jpg';
-        $fileEntity = $fileRepository->writeData(file_get_contents($dataFileName), $imageFileName);
+        $fileEntity = $fileRepository->writeData(file_get_contents($dataFileName), $imageFileName, FileExists::Replace);
         $fileSystem->delete($dataFileName);
       }
       else {
         if ($filter === 'FlateDecode') {
-
-          $imageFileName = str_replace('temporary://', 'public://', $dataFileName) . '.png';
-
           $width = $image->getWidth();
           $height = $image->getHeight();
           $bitsPerComponent = $image->getBitsPerComponent();
@@ -63,12 +63,12 @@ class Images extends TransformPluginBase implements TransformInterface {
           if ($imageFile instanceof \GdImage) {
             // Write a png into /tmp. We'll read it and save it properly.
             imagepng($imageFile, $dataFileName . '.png');
-            $fileEntity = $fileRepository->writeData(file_get_contents($dataFileName . '.png'), $imageFileName);
+            $fileEntity = $fileRepository->writeData(file_get_contents($dataFileName . '.png'), $imageFileName, FileExists::Replace);
             $fileSystem->delete($dataFileName);
             $fileSystem->delete($dataFileName . '.png');
           }
           else {
-            \Drupal::logger('localgov_pdf_importer')
+            \Drupal::logger('localgov_publications_importer')
               ->error("Couldn't import image $width, $height, $bitsPerComponent, $colorSpace");
           }
         }
@@ -76,6 +76,21 @@ class Images extends TransformPluginBase implements TransformInterface {
 
       if ($fileEntity instanceof FileInterface) {
         $image->setFileId($fileEntity->id());
+        $this->import->addImage($fileEntity);
+
+        $media = Media::create([
+          'name' => $fileEntity->getFilename(),
+          'bundle' => 'image',
+          'uid' => 1,
+          'status' => 1,
+          'field_media_image' => [
+            'target_id' => $fileEntity->id(),
+            'alt' => 'Alt',
+            'title' => 'Title',
+          ],
+        ]);
+        $media->save();
+        $image->setMediaId($media->id());
       }
     }
   }

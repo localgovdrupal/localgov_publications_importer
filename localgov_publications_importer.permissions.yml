@@ -1,3 +1,15 @@
 import localgov publications from PDF:
   title: 'Import localgov publications from PDF'
   description: 'Allows users to upload PDF files, which will be turned into publications.'
+administer imports:
+  title: 'Administer imports'
+  description: 'Allows full control over imports.'
+access imports:
+  title: 'Access imports'
+  description: 'Allows viewing of imports.'
+delete own imports:
+  title: 'Delete own imports'
+  description: 'Allows users to delete imports that they started.'
+delete any imports:
+  title: 'Delete any imports'
+  description: 'Allows users to delete imports that anyone started.'

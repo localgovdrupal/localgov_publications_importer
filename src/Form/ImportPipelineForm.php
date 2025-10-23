@@ -109,6 +109,10 @@ class ImportPipelineForm extends EntityForm {
       ],
     ];
 
+    foreach ($this->getTransformPluginDescriptions() as $i => $description) {
+      $form['transform']['selected_transform_plugin'][$i]['#description'] = $description;
+    }
+
     if (count($selectedTransformPlugins) > 0) {
       $form['transform']['transform_plugins'] = [
         '#type' => 'table',
@@ -268,6 +272,16 @@ class ImportPipelineForm extends EntityForm {
   }
 
   /**
+   * Get transform plugin descriptions.
+   *
+   * @return array
+   *   Array of transform plugin descriptions.
+   */
+  protected function getTransformPluginDescriptions(): array {
+    return $this->getPluginDescriptions($this->transformOperationManager->getDefinitions());
+  }
+
+  /**
    * Get save plugin options.
    *
    * @return array
@@ -292,6 +306,23 @@ class ImportPipelineForm extends EntityForm {
       $options[$id] = $pluginDefinition['label'];
     }
     return $options;
+  }
+
+  /**
+   * Get plugin descriptions from plugin definitions.
+   *
+   * @param array $pluginDefinitions
+   *   Plugin definitions array.
+   *
+   * @return array
+   *   Array of plugin descriptions, id => description.
+   */
+  protected function getPluginDescriptions(array $pluginDefinitions): array {
+    $descriptions = [];
+    foreach ($pluginDefinitions as $id => $pluginDefinition) {
+      $descriptions[$id] = $pluginDefinition['description'];
+    }
+    return $descriptions;
   }
 
 }

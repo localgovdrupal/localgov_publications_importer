@@ -9,4 +9,5 @@ localgov_publications_importer.import:
   title: 'Import Publication'
   appears_on:
     - system.admin_content
+    - view.imports.page_1
   weight: 90

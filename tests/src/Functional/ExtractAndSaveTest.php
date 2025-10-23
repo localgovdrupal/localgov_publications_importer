@@ -2,9 +2,8 @@
 
 namespace Drupal\Tests\localgov_publications_importer\Functional;
 
-use Drupal\node\NodeInterface;
 use Drupal\Tests\BrowserTestBase;
-use Drupal\localgov_publications_importer\ImportInterface;
+use Drupal\node\NodeInterface;
 
 /**
  * Tests our default extract and save plugins.
@@ -12,6 +11,8 @@ use Drupal\localgov_publications_importer\ImportInterface;
  * @group localgov_publications_importer
  */
 class ExtractAndSaveTest extends BrowserTestBase {
+
+  use FileProviderTrait;
 
   /**
    * {@inheritdoc}
@@ -49,50 +50,21 @@ class ExtractAndSaveTest extends BrowserTestBase {
   }
 
   /**
-   * Get the directory we're reading PDF files from.
-   */
-  protected static function dataDir(): string {
-    // We keep test data in a separate module, installed as a dev dependency.
-    // This is because it's quite big, and we don't want to install it in
-    // everyone's sites.
-    return dirname(__FILE__) . "/../../../../localgov_publications_importer_test_data/data/";
-  }
-
-  /**
-   * Data provider for PDF file test data.
-   */
-  public static function fileProvider(): array {
-    $dataDir = self::dataDir();
-    $rtn = [];
-    foreach (scandir($dataDir) as $dirname) {
-      if (str_starts_with($dirname, '.')) {
-        continue;
-      }
-      // Look one level down for files.
-      if (is_dir($dataDir . '/' . $dirname)) {
-        foreach (scandir($dataDir . '/' . $dirname) as $name) {
-          if (str_starts_with($name, '.')) {
-            continue;
-          }
-          $rtn[] = [$dirname . '/' . $name];
-        }
-      }
-    }
-    return $rtn;
-  }
-
-  /**
    * Test the smalot_pdfparser extract and save_publication save plugins.
    *
    * @dataProvider fileProvider
    */
-  public function testGetImportReturnsImportInterface($fileName): void {
+  public function testExtractAndSaveAsPublications($fileName, $title, $pageCount): void {
 
     $extractPlugin = $this->extractManager->createInstance('smalot_pdfparser');
     $savePlugin = $this->saveManager->createInstance('save_publication');
 
-    $import = $extractPlugin->setSource(self::dataDir() . $fileName)->getImport();
-    $this->assertInstanceOf(ImportInterface::class, $import, "SmalotPdfParserExtract::getImport() failed on file: {$fileName}");
+    $import = $this->createImport($fileName);
+
+    $extractPlugin->extract($import);
+
+    $this->assertEquals($title, $import->getTitle(), "Check title has been populated.");
+    $this->assertEquals($pageCount, count($import->getPages()), "Check pages have been populated.");
 
     $node = $savePlugin->import($import);
     $this->assertInstanceOf(NodeInterface::class, $node);

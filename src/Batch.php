@@ -24,39 +24,43 @@ class Batch {
   /**
    * Runs the extract plugin.
    */
-  public static function extract(string $importPipelineId, string $filename, array &$context): void {
-    $context['results']['import'] = self::importer($importPipelineId)->extract($filename);
+  public static function extract(ImportInterface $import, array &$context): void {
+    $context['results']['import'] = $import;
+    self::importer($import->getPipeline())->extract($import);
+    $import->save();
   }
 
   /**
    * Runs the transform plugins, one page at a time.
    */
-  public static function transform(string $importPipelineId, array &$context): void {
+  public static function transform(ImportInterface $import, array &$context): void {
 
-    $importer = self::importer($importPipelineId);
+    $importer = self::importer($import->getPipeline());
+
+    // Reload the import from the DB because reasons.
+    $import = \Drupal::entityTypeManager()->getStorage('import')->load($import->id());
 
     $pluginIds = $importer->getTransformPluginIds();
 
     // Set this method to keep being called until we decide we're done.
     $context['finished'] = 0;
 
-    /** @var \Drupal\localgov_publications_importer\Import $import */
-    $import = $context['results']['import'];
+    if (!isset($context['sandbox']['done'])) {
+      $context['sandbox']['done'] = [];
+    }
 
-    if (isset($context['sandbox']['done'])) {
-      $totalSteps = count($pluginIds) * count($import->getPages());
-      $completedSteps = 0;
-      foreach ($context['sandbox']['done'] as $steps) {
-        $completedSteps += count($steps);
-      }
-      if ($totalSteps === 0) {
-        // If there's no steps, because there's no transform plugins, or there's
-        // no pages to run them on, we're done.
-        $context['finished'] = 1;
-      }
-      else {
-        $context['finished'] = $completedSteps / $totalSteps;
-      }
+    $totalSteps = count($pluginIds) * count($import->getPages());
+    $completedSteps = 0;
+    foreach ($context['sandbox']['done'] as $steps) {
+      $completedSteps += count($steps);
+    }
+    if ($totalSteps === 0) {
+      // If there's no steps, because there's no transform plugins, or there's
+      // no pages to run them on, we're done.
+      $context['finished'] = 1;
+    }
+    else {
+      $context['finished'] = $completedSteps / $totalSteps;
     }
 
     // Do this one step at a time by limiting the loop using the sandbox.
@@ -85,6 +89,8 @@ class Batch {
       }
     }
 
+    $import->save();
+
     // Set this to 1 if we make it out of the loop,
     // to ensure we finish this step.
     $context['finished'] = 1;
@@ -93,11 +99,17 @@ class Batch {
   /**
    * Runs the save plugin.
    */
-  public static function save(string $importPipelineId, array &$context): void {
+  public static function save(ImportInterface $import, array &$context): void {
+
+    // Reload the import from the DB because reasons.
+    $import = \Drupal::entityTypeManager()->getStorage('import')->load($import->id());
+
     // We might not be importing to nodes, eventually... Generalise this.
-    $node = self::importer($importPipelineId)->save($context['results']['import']);
+    $node = self::importer($import->getPipeline())->save($import);
     if ($node instanceof NodeInterface) {
       $context['results']['redirect'] = '/node/' . $node->id();
+      $import->setResult($node);
+      $import->save();
     }
   }
 

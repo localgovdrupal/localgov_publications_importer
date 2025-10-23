@@ -41,6 +41,8 @@ If you'd like to use AI to clean up or transform the text, you can. A submodule,
 
 Now repeat the steps to upload a PDF from before. You'll notice that the form submission takes longer, and the results are cleaned up compared to what they were previously like.
 
+Bear in mind that if you do choose to use this feature with an external AI, you should only import content that you're willing to share with the provider of that AI.
+
 ## Plugin structure:
 
 This module is designed to be customisable. You can either write your own plugins to affect how content is imported, or use Drupal modules that provide plugins.

@@ -123,6 +123,9 @@ class SmalotPdfParserExtract extends ExtractPluginBase implements ContainerFacto
     // It stops the text it's in being saved to the DB.
     $text = str_replace("\xD7", ' ', $text);
 
+    // This is in the "Unicode private range". We may need to remove all of it.
+    $text = str_replace("\uF0B7", ' ', $text);
+
     // Remove leading/trailing whitespace.
     return trim($text);
   }
@@ -254,13 +257,24 @@ class SmalotPdfParserExtract extends ExtractPluginBase implements ContainerFacto
   protected function addLinks(PdfPage $pdfPage, Page $importPage): void {
     $search = [];
     $replace = [];
+
+    $annotations = [];
+
     foreach ($this->getAnnotations($pdfPage) as $annotation) {
 
       $subType = $annotation->get('Subtype')->getContent();
-      if ($subType !== 'Link') {
-        continue;
+      if ($subType == 'Link') {
+        $annotations[] = $annotation;
       }
+    }
 
+    if ($annotations === []) {
+      return;
+    }
+
+    $links = [];
+
+    foreach ($annotations as $annotation) {
       $rect = [];
       foreach ($annotation->get('Rect')->getRawContent() as $coordinate) {
         $rect[] = $coordinate->getContent();
@@ -276,21 +290,27 @@ class SmalotPdfParserExtract extends ExtractPluginBase implements ContainerFacto
         $uri = (string) $action->get('URI');
       }
 
-      if (empty($uri)) {
-        continue;
+      if (!empty($uri)) {
+        $links[] = [
+          'uri' => $uri,
+          'rect' => $rect,
+        ];
       }
+    }
+
+    foreach ($links as $i => $link) {
 
       // Rect = lower left x, lower left y, upper right x, upper right y.
-      [$llx, $lly, $urx, $ury] = $rect;
+      [$llx, $lly, $urx, $ury] = $link['rect'];
 
       // Look for text near the midpoint of the box.
       $textX = ($llx + $urx) / 2;
       $textY = ($lly + $ury) / 2;
 
       // Set the area to search to the dimensions of the box, plus a bit extra.
-      $extra = 1.9;
-      $xError = ($urx - $llx) / $extra;
-      $yError = ($ury - $lly) / $extra;
+      $extra = 0.5;
+      $xError = ($urx - $llx) * $extra;
+      $yError = ($ury - $lly) * $extra;
 
       // Can we find the text this annotation is around?
       $texts = $pdfPage->getTextXY($textX, $textY, $xError, $yError);
@@ -302,19 +322,56 @@ class SmalotPdfParserExtract extends ExtractPluginBase implements ContainerFacto
       }, $texts);
 
       $linkText = $this->buildLinkText($textSearch);
-      if ($linkText !== '') {
-        // @todo Check the return value here and do individual replacements.
-        // (if we can't match the entire string). This will need to be careful
-        // about strings like "-" showing up. Check for a minimum length?
-        // Ideally, we should do this earlier when we're assembling the text
-        // array, then we still have the mapping of content to postition.
-        $search[] = $linkText;
-        $replace[] = "<a href=\"{$uri}\">{$linkText}</a>";
+      if ($linkText === '') {
+        // Log this...
+        unset($links[$i]);
+      }
+      else {
+        $links[$i]['text'] = $linkText;
       }
     }
 
+    // Combine links where we can. This makes for more accurate search/replace.
+    $prevIndex = NULL;
+    foreach ($links as $index => $link) {
+
+      // Loop over all the links, comparing each with the one before it.
+      // They seem to be in page order.
+      if ($prevIndex === NULL) {
+        $prevIndex = $index;
+        continue;
+      }
+
+      // If two URLs in a row are the same, we can try to combine them.
+      // This happens when links go over a line break.
+      if ($links[$prevIndex]['uri'] === $links[$index]['uri']) {
+
+        // Build a regex to look for the combined text,
+        // with whitespace in between.
+        $chars = '/.^$*+-?()[]{}\|';
+        $combinedTextRegex = '/' . addcslashes($links[$prevIndex]['text'], $chars) . '\s+' . addcslashes($links[$index]['text'], $chars) . '/';
+
+        // If we find the combined text, use it as a replacement and remove the
+        // other identical link.
+        if ($combinedTextResult = $this->pageContains($importPage, $combinedTextRegex)) {
+          $links[$prevIndex]['text'] = $combinedTextResult;
+          unset($links[$index]);
+
+          // Set this to the previous, so that when it's moved on at the end of
+          // the loop, we end of looking at the previous index again.
+          $index = $prevIndex;
+        }
+      }
+      $prevIndex = $index;
+    }
+
+    foreach ($links as $link) {
+      $search[] = $link['text'];
+      $replace[] = "<a href=\"{$link['uri']}\">{$link['text']}</a>";
+    }
+
     if (count($search) > 0) {
-      if ($this->replaceContent($importPage, $search, $replace) === 0) {
+      if (!$this->replaceContent($importPage, $search, $replace)) {
         // If zero replacements were made, log the failure:
         $this->getLogger('localgov_publications_importer')->debug("Couldn't find text '{$search}' on page {$importPage->getPageNumber()} of {$importPage->getTitle()}");
       }
@@ -371,6 +428,21 @@ class SmalotPdfParserExtract extends ExtractPluginBase implements ContainerFacto
   }
 
   /**
+   * Does the page contain this text?
+   *
+   * This could be a method on the page?
+   *
+   * @return ?string
+   *   The matched string, if a string matched.
+   */
+  protected function pageContains(Page $importPage, string $pattern): ?string {
+    if (preg_match($pattern, $importPage->getContent(), $matches)) {
+      return $matches[0];
+    }
+    return NULL;
+  }
+
+  /**
    * Combines text search results into a string to search for.
    */
   protected function buildLinkText(array $textSearch): string {
@@ -384,6 +456,8 @@ class SmalotPdfParserExtract extends ExtractPluginBase implements ContainerFacto
 
     // Trim any spaces off the start and end.
     $linkText = trim($linkText);
+
+    $linkText = $this->cleanText($linkText);
 
     return $linkText;
   }

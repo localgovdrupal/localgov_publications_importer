@@ -12,10 +12,17 @@
         }
     ],
     "require": {
-        "smalot/pdfparser": "^2.7.0"
+        "smalot/pdfparser": "^2.12.1"
     },
     "require-dev": {
         "localgovdrupal/localgov_publications_importer_test_data": "1.x-dev"
+    },
+    "extra": {
+        "patches": {
+            "smalot/pdfparser": {
+                "PDFObject:: getTextArray() shouldn't include XObject Forms.": "https://patch-diff.githubusercontent.com/raw/smalot/pdfparser/pull/783.patch"
+            }
+        }
     },
     "suggest": {
         "drupal/ai": "Format the imported PDF using an AI LLM (required by the submodule localgov_publications_importer_ai)"

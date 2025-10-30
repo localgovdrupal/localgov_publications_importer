@@ -4,20 +4,20 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "a0c15461948b41b799971c1d2dd0029c",
+    "content-hash": "eef461099675bb3f9afb16dea9f4fa8e",
     "packages": [
         {
             "name": "smalot/pdfparser",
-            "version": "v2.12.0",
+            "version": "v2.12.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/smalot/pdfparser.git",
-                "reference": "8440edbf58c8596074e78ada38dcb0bd041a5948"
+                "reference": "98d31ba34ef5b5a98897ef4b6c3925d502ea53b1"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/smalot/pdfparser/zipball/8440edbf58c8596074e78ada38dcb0bd041a5948",
-                "reference": "8440edbf58c8596074e78ada38dcb0bd041a5948",
+                "url": "https://api.github.com/repos/smalot/pdfparser/zipball/98d31ba34ef5b5a98897ef4b6c3925d502ea53b1",
+                "reference": "98d31ba34ef5b5a98897ef4b6c3925d502ea53b1",
                 "shasum": ""
             },
             "require": {
@@ -53,9 +53,9 @@
             ],
             "support": {
                 "issues": "https://github.com/smalot/pdfparser/issues",
-                "source": "https://github.com/smalot/pdfparser/tree/v2.12.0"
+                "source": "https://github.com/smalot/pdfparser/tree/v2.12.1"
             },
-            "time": "2025-03-31T13:16:09+00:00"
+            "time": "2025-07-31T06:19:56+00:00"
         },
         {
             "name": "symfony/polyfill-mbstring",
@@ -121,7 +121,7 @@
                 "shim"
             ],
             "support": {
-                "source": "https://github.com/symfony/polyfill-mbstring/tree/v1.32.0"
+                "source": "https://github.com/symfony/polyfill-mbstring/tree/v1.33.0"
             },
             "funding": [
                 {
@@ -133,6 +133,10 @@
                     "type": "github"
                 },
                 {
+                    "url": "https://github.com/nicolas-grekas",
+                    "type": "github"
+                },
+                {
                     "url": "https://tidelift.com/funding/github/packagist/symfony/symfony",
                     "type": "tidelift"
                 }
@@ -140,10 +144,38 @@
             "time": "2024-12-23T08:48:59+00:00"
         }
     ],
-    "packages-dev": [],
+    "packages-dev": [
+        {
+            "name": "localgovdrupal/localgov_publications_importer_test_data",
+            "version": "1.x-dev",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/localgovdrupal/localgov_publications_importer_test_data.git",
+                "reference": "5f7b01fc957f8435d1b622e5864114bf3d07affc"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/localgovdrupal/localgov_publications_importer_test_data/zipball/5f7b01fc957f8435d1b622e5864114bf3d07affc",
+                "reference": "5f7b01fc957f8435d1b622e5864114bf3d07affc",
+                "shasum": ""
+            },
+            "default-branch": true,
+            "type": "drupal-module",
+            "notification-url": "https://packagist.org/downloads/",
+            "description": "Test data for localgovdrupal/localgov_publications_importer",
+            "homepage": "https://github.com/localgovdrupal/localgov_publications_importer_test_data",
+            "support": {
+                "issues": "https://github.com/localgovdrupal/localgov_publications_importer_test_data/issues",
+                "source": "https://github.com/localgovdrupal/localgov_publications_importer_test_data/tree/1.x"
+            },
+            "time": "2025-10-23T08:56:49+00:00"
+        }
+    ],
     "aliases": [],
     "minimum-stability": "dev",
-    "stability-flags": [],
+    "stability-flags": {
+        "localgovdrupal/localgov_publications_importer_test_data": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": [],

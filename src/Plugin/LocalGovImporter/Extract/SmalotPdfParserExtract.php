@@ -123,9 +123,6 @@ class SmalotPdfParserExtract extends ExtractPluginBase implements ContainerFacto
     // It stops the text it's in being saved to the DB.
     $text = str_replace("\xD7", ' ', $text);
 
-    // This is in the "Unicode private range". We may need to remove all of it.
-    $text = str_replace("\uF0B7", ' ', $text);
-
     // Remove leading/trailing whitespace.
     return trim($text);
   }
@@ -307,19 +304,19 @@ class SmalotPdfParserExtract extends ExtractPluginBase implements ContainerFacto
       $textX = ($llx + $urx) / 2;
       $textY = ($lly + $ury) / 2;
 
-      // Set the area to search to the dimensions of the box, plus a bit extra.
-      $extra = 0.5;
-      $xError = ($urx - $llx) * $extra;
-      $yError = ($ury - $lly) * $extra;
+      // Set the area to search to the dimensions of the box.
+      $xError = ($urx - $llx) / 2;
+      $yError = ($ury - $lly) / 2;
 
       // Can we find the text this annotation is around?
       $texts = $pdfPage->getTextXY($textX, $textY, $xError, $yError);
 
       // There may be multiple text items found. Combine them into one.
-      $textSearch = array_map(function ($text) {
+      $textSearch = [];
+      foreach ($texts as $text) {
         // Index 0 is position data. 1 is the text.
-        return $text[1];
-      }, $texts);
+        $textSearch[] = $text[1];
+      }
 
       $linkText = $this->buildLinkText($textSearch);
       if ($linkText === '') {
@@ -371,10 +368,24 @@ class SmalotPdfParserExtract extends ExtractPluginBase implements ContainerFacto
     }
 
     if (count($search) > 0) {
-      if (!$this->replaceContent($importPage, $search, $replace)) {
-        // If zero replacements were made, log the failure:
-        $this->getLogger('localgov_publications_importer')->debug("Couldn't find text '{$search}' on page {$importPage->getPageNumber()} of {$importPage->getTitle()}");
+
+      $text = $importPage->getContent();
+      foreach ($search as $i => $searchText) {
+
+        // [^<] is here to ensure that we don't replace links that have the same
+        // text that we've already replaced. Combined with the limit of 1, this
+        // means we can handle links with the same text by working down the
+        // page.
+        $pattern = '/' . preg_quote($searchText, '/') . '([^<])/';
+        $replacement = $replace[$i] . '$1';
+
+        $text = preg_replace($pattern, $replacement, $text, 1, $count);
+        if ($count === 0) {
+          $this->getLogger('localgov_publications_importer')->debug("Couldn't find text '{$searchText}' on page {$importPage->getPageNumber()} of {$importPage->getTitle()}");
+        }
       }
+
+      $importPage->setContent($text);
     }
   }
 
@@ -409,22 +420,6 @@ class SmalotPdfParserExtract extends ExtractPluginBase implements ContainerFacto
     }
 
     return $rtn;
-  }
-
-  /**
-   * Replace content in the page.
-   *
-   * This could be a method on the page?
-   *
-   * @return bool
-   *   If at least one replacement was made.
-   */
-  protected function replaceContent(Page $importPage, array $search, array $replace): bool {
-    $text = $importPage->getContent();
-    $text = str_replace($search, $replace, $text, $count);
-    $importPage->setContent($text);
-
-    return $count > 0;
   }
 
   /**

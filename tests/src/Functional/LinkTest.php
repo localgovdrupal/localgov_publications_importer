@@ -48,18 +48,14 @@ class LinkTest extends BrowserTestBase {
   public function testLinks($fileName, $title, $pageCount, $links = NULL): void {
 
     $extractPlugin = $this->extractManager->createInstance('smalot_pdfparser');
-
     $import = $this->createImport($fileName);
-
     $extractPlugin->extract($import);
 
-    $pages = $import->getPages();
-
-    foreach ($links as $pageNumber => $pageLinks) {
-      $content = $pages[$pageNumber]->getContent();
-      foreach ($pageLinks as $link) {
-        $this->assertStringContainsString($link, $content, "Link missing from content.");
-      }
+    foreach ($import->getPages() as $i => $page) {
+      $pageLinks = $links[$i] ?? [];
+      // Get the links from the content, and compare against the expected list.
+      preg_match_all("#<a[^<]+</a>#", $page->getContent(), $matches);
+      $this->assertEquals($pageLinks, $matches[0]);
     }
   }
 

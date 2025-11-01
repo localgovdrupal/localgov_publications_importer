@@ -26,7 +26,7 @@ This allows the ability to import content in different ways - for example, using
 
 ## Using AI to format the imported PDF
 
-If you'd like to use AI to clean up or transform the text, you can. A submodule, localgov_publications_importer_ai, is included. To enable this module you will need to install the [Drupal AI module](https://www.drupal.org/project/ai) and at least one [AI provider module](https://www.drupal.org/project/ai#:~:text=complete%20AI%20applications.-,AI%20Providers,-In%20order%20to). The default AI chat provider will be used if one is configured. In the steps below will illustrate how to configure one using ChatGPT. Similar steps can be used with other AI LLM providers:
+If you'd like to use AI to clean up or transform the text, you can. A submodule, localgov_publications_importer_ai, is included. To enable this module you will need to install the [Drupal AI module](https://www.drupal.org/project/ai) and at least one [AI provider module](https://www.drupal.org/project/ai#:~:text=complete%20AI%20applications.-,AI%20Providers,-In%20order%20to). The default AI chat provider will be used if one is configured. The steps below illustrate how to configure ChatGPT to work with this module. Similar steps can be used with other AI providers.
 
 1) Enable the localgov_publications_importer_ai submodule.
 2) Download and install the [Open AI provider](https://www.drupal.org/project/ai_provider_openai) module.

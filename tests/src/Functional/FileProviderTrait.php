@@ -57,20 +57,21 @@ trait FileProviderTrait {
     $file_system = \Drupal::service('file_system');
     $file_system->copy($fileName, $targetLocation, FileExists::Replace);
 
+    $user = $this->drupalCreateUser();
+
     $file = File::create([
       'filename' => basename($fileName),
       'uri' => $targetLocation,
       'status' => 1,
-      'uid' => 1,
+      'uid' => $user->id(),
     ]);
     $file->save();
 
     $import = Import::create([
       'file' => $file,
       'title' => $file->getFilename(),
-      // We may not need these.
-      'creator' => NULL,
-      'pipeline' => '',
+      'creator' => $user,
+      'pipeline' => 'standard',
     ]);
 
     $import->save();

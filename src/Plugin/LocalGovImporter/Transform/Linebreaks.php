@@ -22,11 +22,4 @@ class Linebreaks extends TransformPluginBase {
     return trim(str_replace("\t\n", ' ', $content));
   }
 
-  /**
-   * {@inheritDoc}
-   */
-  public function order(): int {
-    return 30;
-  }
-
 }

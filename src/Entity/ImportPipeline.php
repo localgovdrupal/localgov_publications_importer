@@ -21,7 +21,7 @@ use Drupal\Core\Config\Entity\ConfigEntityBase;
  *     },
  *   },
  *   config_prefix = "import_pipeline",
- *   admin_permission = "administer site configuration",
+ *   admin_permission = "administer import pipelines",
  *   entity_keys = {
  *     "id" = "id",
  *     "label" = "label"

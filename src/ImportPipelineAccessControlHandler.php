@@ -16,32 +16,32 @@ class ImportAccessControlHandler extends EntityAccessControlHandler {
    * {@inheritdoc}
    */
   protected function checkAccess(EntityInterface $entity, $operation, AccountInterface $account) {
-    if ($account->hasPermission('administer imports')) {
+    if ($account->hasPermission('administer import pipelines')) {
       return AccessResult::allowed()->cachePerPermissions();
     }
 
     switch ($operation) {
       case 'view':
-        if ($account->hasPermission('access imports')) {
+        if ($account->hasPermission('access import pipelines')) {
           return AccessResult::allowed()->cachePerPermissions();
         }
-        return AccessResult::neutral()->setReason("The following permissions are required: 'access imports'.");
+        return AccessResult::neutral()->setReason("The following permissions are required: 'access import pipelines'.");
 
       case 'delete':
 
-        if ($account->hasPermission('delete any imports')) {
+        if ($account->hasPermission('delete any import pipelines')) {
           return AccessResult::allowed()->cachePerPermissions();
         }
 
         $owner = $entity->getCreator();
 
         if ($owner instanceof AccountInterface && $owner->id() === $account->id()) {
-          if ($account->hasPermission('delete own imports')) {
+          if ($account->hasPermission('delete own import pipelines')) {
             return AccessResult::allowed()->cachePerPermissions();
           }
         }
 
-        return AccessResult::neutral()->setReason("The following permissions are required: 'delete any imports' OR 'delete own imports'.");
+        return AccessResult::neutral()->setReason("The following permissions are required: 'delete any import pipelines' OR 'delete own import pipelines'.");
 
       default:
         // No opinion.

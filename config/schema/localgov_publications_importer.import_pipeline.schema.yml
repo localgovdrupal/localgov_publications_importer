@@ -1,4 +1,4 @@
-drupal\localgov_publications_importer\Entity\ImportPipeline:
+localgov_publications_importer.import_pipeline.*:
   type: config_entity
   label: 'Import Pipeline'
   mapping:
@@ -12,25 +12,19 @@ drupal\localgov_publications_importer\Entity\ImportPipeline:
       type: string
       label: 'Extract Plugin'
     extract_plugin_configuration:
-      type: sequence
+      type: ignore
       label: 'Extract Plugin Configuration'
-      sequence:
-        - type: any
     transform_plugins:
       type: sequence
       label: 'Transform Plugins'
       sequence:
-        - type: string
+        type: ignore
     transform_plugin_configurations:
-      type: sequence
+      type: ignore
       label: 'Transform Plugin Configurations'
-      sequence:
-        - type: any
     save_plugin:
       type: string
       label: 'Save Plugin'
     save_plugin_configuration:
-      type: sequence
+      type: ignore
       label: 'Save Plugin Configuration'
-      sequence:
-        - type: any

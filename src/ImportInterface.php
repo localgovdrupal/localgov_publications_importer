@@ -3,6 +3,7 @@
 namespace Drupal\localgov_publications_importer;
 
 use Drupal\file\Entity\File;
+use Drupal\user\UserInterface;
 
 /**
  * Interface for content being imported.
@@ -74,5 +75,15 @@ interface ImportInterface {
    * Get the file.
    */
   public function getFile(): ?File;
+
+  /**
+   * Get the creator user.
+   */
+  public function getCreator(): ?UserInterface;
+
+  /**
+   * Set the creator user.
+   */
+  public function setCreator(UserInterface $user): void;
 
 }

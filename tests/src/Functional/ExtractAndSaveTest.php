@@ -68,6 +68,8 @@ class ExtractAndSaveTest extends BrowserTestBase {
 
     $node = $savePlugin->import($import);
     $this->assertInstanceOf(NodeInterface::class, $node);
+
+    $this->assertEquals($import->getCreator()->id(), $node->getOwner()->id());
   }
 
 }

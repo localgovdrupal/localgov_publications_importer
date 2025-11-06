@@ -61,6 +61,7 @@ class Publication extends SavePluginBase {
       $publicationPage = $nodeStorage->create([
         'type' => 'localgov_publication_page',
         'title' => $page->getTitle(),
+        'uid' => $import->getCreator()->id(),
         'book' => $book,
       ]);
 

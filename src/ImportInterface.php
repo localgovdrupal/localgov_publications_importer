@@ -2,12 +2,13 @@
 
 namespace Drupal\localgov_publications_importer;
 
+use Drupal\Core\Entity\EntityInterface;
 use Drupal\file\Entity\File;
 
 /**
  * Interface for content being imported.
  */
-interface ImportInterface {
+interface ImportInterface extends EntityInterface {
 
   /**
    * Set the title of the import.

@@ -33,7 +33,7 @@ class AccessControlTest extends BrowserTestBase {
    * at the moment, as it's a view that only lets you choose one permission to
    * check.
    */
-  public function permissionPathDataProvider(): array {
+  public static function permissionPathDataProvider(): array {
     return [
       ['create imports', 'admin/content/imports/create'],
       ['view imports', 'admin/content/imports'],

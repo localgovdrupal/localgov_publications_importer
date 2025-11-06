@@ -27,7 +27,7 @@ class ImportCommand extends DrushCommands {
   }
 
   /**
-   * Analyzes a PDF file and prints the object names found in it.
+   * Get the next import that needs processing and process it if one exists.
    *
    * @command localgov_publications_importer:import
    * @aliases lpii
@@ -84,7 +84,6 @@ class ImportCommand extends DrushCommands {
 
       $this->getLogger('localgov_publications_importer')->error($e->getMessage(), ['exception' => $e]);
 
-      // @todo Log the error.
       $import = $importStorage->load($import->id());
       $import->setStatus(Import::STATUS_FAILED);
       $import->save();

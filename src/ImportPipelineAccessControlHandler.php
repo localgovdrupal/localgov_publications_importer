@@ -8,7 +8,6 @@ use Drupal\Core\Entity\EntityAccessControlHandler;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Session\AccountInterface;
 
-
 /**
  * Defines the access control handler for the import entity type.
  */

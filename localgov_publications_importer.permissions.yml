@@ -1,36 +1,27 @@
-import localgov publications from PDF:
-  title: 'Import localgov publications from PDF'
-  description: 'Allows users to upload PDF files, which will be turned into publications.'
+create imports:
+  title: 'Create imports'
+  description: 'Allows users to create imports.'
 administer imports:
   title: 'Administer imports'
   description: 'Allows full control over imports.'
-access imports:
-  title: 'Access imports'
+view imports:
+  title: 'View imports'
   description: 'Allows viewing of imports.'
 delete own imports:
   title: 'Delete own imports'
   description: 'Allows users to delete imports that they started.'
-delete any imports:
-  title: 'Delete any imports'
-  description: 'Allows users to delete imports that anyone started.'
 administer import pipelines:
-  title: 'Administer imports'
-  description: 'Allows full control over imports.'
+  title: 'Administer import pipelines'
+  description: 'Allows full control over import pipelines.'
 create import pipelines:
-    title: 'Create import pipelines'
-    description: 'Allows creation of new import pipelines.'
-access import pipelines:
-  title: 'Access import pipelines'
-  description: 'Allows viewing of import pipelines.'
-delete own import pipelines:
-  title: 'Delete own import pipelines'
-  description: 'Allows users to delete their own import pipelines.'
-delete any import pipelines:
-  title: 'Delete any imports'
-  description: 'Allows users to delete any import pipelines.'
-edit own import pipelines:
-  title: 'Edit own import pipelines'
-  description: 'Allows users to edit their own import pipelines.'
-edit any import pipelines:
-  title: 'Edit any import pipelines'
-  description: 'Allows users to delete any import pipelines.'
+  title: 'Create import pipelines'
+  description: 'Allows users to create new import pipelines.'
+view import pipelines:
+  title: 'View import pipelines'
+  description: 'Allows users to view import pipelines.'
+update import pipelines:
+  title: 'Update import pipelines'
+  description: 'Allows users to update import pipelines.'
+delete import pipelines:
+  title: 'Delete import pipelines'
+  description: 'Allows users to delete import pipelines.'

@@ -4,6 +4,7 @@ namespace Drupal\localgov_publications_importer\Entity;
 
 use Drupal\Core\Entity\ContentEntityBase;
 use Drupal\Core\Entity\EntityTypeInterface;
+use Drupal\Core\Url;
 use Drupal\user\UserInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
@@ -32,6 +33,7 @@ use Drupal\node\NodeInterface;
  *       "delete" = "Drupal\Core\Entity\ContentEntityDeleteForm"
  *     },
  *   },
+ *   admin_permission = "administer imports",
  *   base_table = "import",
  *   entity_keys = {
  *     "id" = "id",
@@ -363,6 +365,16 @@ class Import extends ContentEntityBase implements ImportInterface {
       ->setDisplayConfigurable('view', TRUE);
 
     return $fields;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function toUrl($rel = NULL, array $options = []) {
+    // Use the listing view for the canonical URL for this entity until we get
+    // round to needing actual pages for them. Right now we just need something
+    // to let the 'Cancel' button on the delete form work.
+    return Url::fromUri('internal:/admin/content/imports');
   }
 
 }

@@ -19,9 +19,11 @@ use Drupal\Core\Config\Entity\ConfigEntityBase;
  *     "route_provider" = {
  *       "html" = "Drupal\Core\Entity\Routing\AdminHtmlRouteProvider",
  *     },
+ *     "access" = "Drupal\localgov_publications_importer\ImportPipelineAccessControlHandler",
  *   },
  *   config_prefix = "import_pipeline",
  *   admin_permission = "administer import pipelines",
+ *   collection_permission = "view import pipelines",
  *   entity_keys = {
  *     "id" = "id",
  *     "label" = "label"

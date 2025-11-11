@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "eef461099675bb3f9afb16dea9f4fa8e",
+    "content-hash": "f93b60aba759e4c5c5f65b9bf673470b",
     "packages": [
         {
             "name": "smalot/pdfparser",
@@ -151,12 +151,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/localgovdrupal/localgov_publications_importer_test_data.git",
-                "reference": "5f7b01fc957f8435d1b622e5864114bf3d07affc"
+                "reference": "c92dbaeb4187827e0131dcd6e3f34303dac87ceb"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/localgovdrupal/localgov_publications_importer_test_data/zipball/5f7b01fc957f8435d1b622e5864114bf3d07affc",
-                "reference": "5f7b01fc957f8435d1b622e5864114bf3d07affc",
+                "url": "https://api.github.com/repos/localgovdrupal/localgov_publications_importer_test_data/zipball/c92dbaeb4187827e0131dcd6e3f34303dac87ceb",
+                "reference": "c92dbaeb4187827e0131dcd6e3f34303dac87ceb",
                 "shasum": ""
             },
             "default-branch": true,
@@ -168,7 +168,7 @@
                 "issues": "https://github.com/localgovdrupal/localgov_publications_importer_test_data/issues",
                 "source": "https://github.com/localgovdrupal/localgov_publications_importer_test_data/tree/1.x"
             },
-            "time": "2025-10-23T08:56:49+00:00"
+            "time": "2025-10-31T06:35:18+00:00"
         }
     ],
     "aliases": [],

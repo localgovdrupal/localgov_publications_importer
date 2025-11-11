@@ -18,9 +18,10 @@
         "localgovdrupal/localgov_publications_importer_test_data": "1.x-dev"
     },
     "extra": {
+        "enable-patching": true,
         "patches": {
             "smalot/pdfparser": {
-                "PDFObject:: getTextArray() shouldn't include XObject Forms.": "https://patch-diff.githubusercontent.com/raw/smalot/pdfparser/pull/783.patch"
+                "PDFObject:: getTextArray() shouldn't include XObject Forms.": "patches/smalot_pdfparser_pr_783_no_tests.patch"
             }
         }
     },

@@ -21,7 +21,7 @@
         "enable-patching": true,
         "patches": {
             "smalot/pdfparser": {
-                "PDFObject:: getTextArray() shouldn't include XObject Forms.": "patches/smalot_pdfparser_pr_783_no_tests.patch"
+                "PDFObject:: getTextArray() shouldn't include XObject Forms.": "https://github.com/smalot/pdfparser/commit/a23e53abfded68d24104dc5fb5d435943cecbeca.patch"
             }
         }
     },

@@ -194,7 +194,7 @@ display:
             preserve_tags: ''
             html: false
           element_type: ''
-          element_class: ''
+          element_class: nowrap
           element_label_type: ''
           element_label_class: ''
           element_label_colon: true
@@ -257,7 +257,7 @@ display:
             preserve_tags: ''
             html: false
           element_type: ''
-          element_class: ''
+          element_class: nowrap
           element_label_type: ''
           element_label_class: ''
           element_label_colon: true

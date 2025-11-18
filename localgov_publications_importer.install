@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Install, update and uninstall functions for the LocalGov Publications Importer module.
+ * Install and uninstall functions.
  */
 
 use Drupal\Core\File\FileSystemInterface;

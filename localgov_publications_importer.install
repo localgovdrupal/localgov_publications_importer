@@ -1,0 +1,60 @@
+<?php
+
+/**
+ * @file
+ * Install, update and uninstall functions for the LocalGov Publications Importer module.
+ */
+
+use Drupal\Core\File\FileSystemInterface;
+
+/**
+ * Implements hook_install().
+ */
+function localgov_publications_importer_install() {
+  $directory = 'public://localgov_publications_importer';
+  $file_system = \Drupal::service('file_system');
+  $logger = \Drupal::logger('localgov_publications_importer');
+
+  try {
+    if (!file_exists($directory)) {
+      $result = $file_system->prepareDirectory(
+        $directory,
+        FileSystemInterface::CREATE_DIRECTORY | FileSystemInterface::MODIFY_PERMISSIONS
+      );
+
+      if (!$result) {
+        $logger->warning('Failed to create directory %directory during module installation.', ['%directory' => $directory]);
+      }
+    }
+    // No success log for existing or created directory.
+  }
+  catch (\Exception $e) {
+    $logger->error('Error creating directory %directory: @message', [
+      '%directory' => $directory,
+      '@message' => $e->getMessage(),
+    ]);
+  }
+}
+
+/**
+ * Implements hook_uninstall().
+ */
+function localgov_publications_importer_uninstall() {
+  $directory = 'public://localgov_publications_importer';
+  $file_system = \Drupal::service('file_system');
+  $logger = \Drupal::logger('localgov_publications_importer');
+
+  try {
+    if (file_exists($directory)) {
+      $file_system->deleteRecursive($directory);
+      // No success log for removal.
+    }
+    // No log if directory does not exist.
+  }
+  catch (\Exception $e) {
+    $logger->error('Error removing directory %directory: @message', [
+      '%directory' => $directory,
+      '@message' => $e->getMessage(),
+    ]);
+  }
+}

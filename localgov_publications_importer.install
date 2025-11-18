@@ -10,7 +10,7 @@ use Drupal\Core\File\FileSystemInterface;
 /**
  * Implements hook_install().
  */
-function localgov_publications_importer_install() {
+function localgov_publications_importer_install(): void {
   $directory = 'public://localgov_publications_importer';
   $file_system = \Drupal::service('file_system');
   $logger = \Drupal::logger('localgov_publications_importer');
@@ -39,7 +39,7 @@ function localgov_publications_importer_install() {
 /**
  * Implements hook_uninstall().
  */
-function localgov_publications_importer_uninstall() {
+function localgov_publications_importer_uninstall(): void {
   $directory = 'public://localgov_publications_importer';
   $file_system = \Drupal::service('file_system');
   $logger = \Drupal::logger('localgov_publications_importer');

@@ -7,11 +7,8 @@ extract_plugin_configuration: {  }
 transform_plugins:
   - transform_images
   - transform_line_breaks
-  - transform_ai_aio
 transform_plugin_configurations:
   - {  }
   - {  }
-  -
-    prompt: "You are a website content editor. Format the provided text and HTML into valid JSON only.\r\n\r\nRequirements:\r\n- Return ONLY a JSON array of page objects, no other text\r\n- Each page object has: \"title\" (string), \"content\" (string)\r\n- Split the content into MULTIPLE pages\r\n- Each page should contain 200-500 words of content when possible\r\n- Break pages at natural stopping points: section boundaries, topic changes, or major headings\r\n- Content value contains HTML using only the tags: h1, h2, h3, h4, h5, h6, p, ul, ol, li, img\r\n- Use the first line as h1 if it's a complete sentence\r\n- Preserve original text and HTML tags exactly, only add HTML tags\r\n- Generate descriptive titles that reflect each page's main topic\r\n- Pay special attention to img tags - they must be preserved with all original attributes\r\n- Properly escape all double quotes in JSON strings\r\n- Ensure any JSON you create is valid. This is really important.\r\n\r\nSplit strategy:\r\n- Look for major headings, topic shifts, or natural content breaks\r\n- Each page should feel complete but part of a larger whole\r\n- Distribute content evenly across pages\r\n- Don't create pages that are too short (under 100 words) unless necessary\r\n\r\nExample format:\r\n[\r\n  {\"title\":\"Introduction and Overview\",\"content\":\"<h1>Main Title</h1><img src=\"/example-image.jpg\"><p>Intro content...</p>\"},\r\n  {\"title\":\"Key Concepts\",\"content\":\"<h2>Section Title</h2><p>More content...</p>\"},\r\n  {\"title\":\"Advanced Topics\",\"content\":\"<h2>Another Section</h2><p>Final content...</p>\"}\r\n]\r\n"
 save_plugin: save_publication
 save_plugin_configuration: {  }

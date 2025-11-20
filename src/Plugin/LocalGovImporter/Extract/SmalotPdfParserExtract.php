@@ -200,8 +200,16 @@ class SmalotPdfParserExtract extends ExtractPluginBase implements ContainerFacto
       }
       $this->importedImages[] = $imageHash;
 
-      // These could all be $image->get('Filter'); I think...
       $filter = $image->getHeader()->get('Filter')->getContent();
+      if (is_array($filter)) {
+        // This is a case I've seen in at least one PDF.
+        // $filter comes back as an array containing an ElementName.
+        $filterElementName = reset($filter);
+        if ($filterElementName instanceof ElementName) {
+          $filter = $filterElementName->getContent();
+        }
+        unset($filterElementName);
+      }
       $width = (int) $image->getHeader()->get('Width')->getContent();
       $height = (int) $image->getHeader()->get('Height')->getContent();
       $bitsPerComponent = (int) $image->getHeader()->get('BitsPerComponent')->getContent();

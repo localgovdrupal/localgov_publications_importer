@@ -1,0 +1,46 @@
+<?php
+
+/**
+ * @file
+ * Localgov publications importer install and update hooks.
+ */
+
+use Drupal\Core\Entity\ContentEntityType;
+use Drupal\localgov_publications_importer\Entity\Import;
+use Drupal\Core\Config\Config;
+use Drupal\Core\Config\FileStorage;
+
+/**
+ * Install entity definitions for the localgov_publications import entity.
+ */
+function localgov_publications_importer_update_10001(): void {
+  $entity_definition_update_manager = \Drupal::entityDefinitionUpdateManager();
+  if (!$entity_definition_update_manager->getEntityType('import')) {
+    $entity_type = new ContentEntityType([
+      'id' => 'import',
+      'class' => Import::class,
+      'label' => t('import'),
+      'base_table' => 'import',
+      'entity_keys' => [
+        'id' => 'id',
+        'uuid' => 'uuid',
+      ],
+    ]);
+    \Drupal::entityDefinitionUpdateManager()->installEntityType($entity_type);
+  }
+}
+
+/**
+ * Install import admin view.
+ */
+function localgov_publications_importer_update_10002(): void {
+  $path_to_module = \Drupal::service('extension.path.resolver')->getPath('module', 'localgov_publications_importer');
+  $config_path = $path_to_module . '/config/install';
+  $config_storage = new FileStorage($config_path);
+  $view = \Drupal::service('config.factory')->getEditable('views.view.imports');
+  assert($view instanceof Config);
+  if ($view->isNew()) {
+    $view->setData($config_storage->read('views.view.imports'));
+    $view->save();
+  }
+}
